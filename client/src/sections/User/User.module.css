@@ -1,0 +1,214 @@
+#user {
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    height: max-content;
+    padding: 2em 0em;
+}
+
+#user h4 {
+    color: black;
+}
+
+#user nav {
+    margin-left: 3em;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.584);
+}
+
+#user form {
+    height: 5em;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 4em;
+}
+/* .back {
+    position: absolute;
+    left: 0;
+    background-color: gray;
+    height: 120vh;
+    width: 360px;
+    top: 40%;
+
+} */
+
+.usercard {
+    background-color: #f7f7f7;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: column;
+    gap: 2em;
+    height: max-content;
+    width: max-content;
+    transition: 0.3s;
+    padding: 3em 4em;
+  }
+
+
+
+.usercard:hover {
+    box-shadow: 0 0px 10px 10px rgba(222, 220, 220, 0.3);
+}
+  
+.usercard p {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.usercardinfo {
+    border-radius: 20px;
+    border: 1px solid black;
+    padding: 1em 1em;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-evenly;
+    height: min-content;
+}
+.usercard form {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 1em;
+    padding: 3em 3em;
+}
+
+.usercard input {
+    width: 100%;
+    padding: 5px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.usercard button {
+    padding: 8px 12px;
+    font-size: 14px;
+    background-color: #ff7f00;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.usercard button:hover {
+    background-color: #e65c00;
+}
+
+.usermain {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    gap: 10em;
+    padding-top: 1em;
+}
+
+.usermessage {
+    background-color: #f7f7f7;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: column;
+    gap: 2em    ;
+    height: 652px;
+    width: 348px;
+    transition: 0.3s;
+    color: black;
+    padding-bottom: 5em;
+  }
+
+.usermessage:hover {
+    box-shadow: 0 0px 10px 10px rgba(222, 220, 220, 0.3);
+}
+
+.usermessage form {
+    height: 100%;
+    width: 100%;
+    gap: 3em;
+    padding-left: 1em;
+}
+
+.prevmessages {
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    padding-top: 2em;
+    gap: 6em;
+    min-height: 652px;
+    width: 40%;
+    transition: 0.3s;
+    color: black;
+    height: max-content;
+    border-radius: 20px;
+  }
+
+.prevmessages form {
+    gap: 3em;
+    margin-top: 5em;
+    width: 80%;
+}
+
+
+.prevmessages:hover {
+    box-shadow: 0 0px 10px 10px rgba(222, 220, 220, 0.3);
+}
+
+.prev {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-start;
+    flex-direction: column;
+    width: 100%;
+    padding: .1em 2em;
+    overflow: hidden;
+}
+
+.prev p {
+    width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.allprev {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    justify-content: flex-start;
+    gap: 1em;
+    align-items: center;
+    flex-direction: column;
+    min-height: max-content;
+}
+
+@media (max-width:700px) {
+    .usercard {
+        width: 90%;
+    }
+    
+    .usermain {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .prevmessages {
+        width: 90%;
+        text-align: center;
+    }
+}

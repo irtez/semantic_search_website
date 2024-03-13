@@ -1,0 +1,130 @@
+#admin {
+    height: max-content;
+    min-width: 100vh;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 5em 2em;
+}
+
+#admin form {
+    font-size: 14px;
+}
+
+
+.creation {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.creation p {
+    color: black;
+}
+  
+.creation form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.creation input,
+.creation button {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid black;
+    border-radius: 3px;
+    color: black;
+}
+
+.creation input {
+    width: 300px;
+}
+
+.creation button {
+    background-color: #4caf50;
+    color: #fff;
+    cursor: pointer;
+}
+
+.creation button:hover {
+    background-color: #45a049;
+}
+
+.creation select {
+    width: 300px;
+}
+
+.brandCreated {
+    color: black;
+    border: 1px solid black;
+    padding: 2em;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-direction: column;
+}
+
+.brandCreated img {
+    height: 70px;
+    width: auto;
+}
+
+.carCreated {
+    color: black;
+    border: 1px solid black;
+    padding: 1.5em;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-direction: column;
+}
+
+.carCreated img {
+    height: 200px;
+    width: auto;
+    border-radius: 10px;
+}
+
+.userMessage {
+    margin-top: 3em;
+    width: 80%;
+    height: max-content;
+    min-height: 60vh;
+    background-color: #f5f5f5;
+    border-radius: 20px;
+    color: black;
+    padding: 3em;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 1em;
+}
+
+.userMessage h4 {
+    align-self: center;
+    padding-bottom: 1em;
+}
+
+
+.userMessage button {
+    border-radius: 20px;
+    border: 1px solid white;
+    background-color: red;
+    color: white;
+    padding: .7em .7em;
+    cursor: pointer;
+    transition: .2s;
+    margin-top: 2em;
+    align-self: center;
+}
+
+.userMessage button:hover {
+    background-color: rgb(229, 4, 4);
+}
