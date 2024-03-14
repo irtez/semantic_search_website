@@ -5,7 +5,8 @@ import { useContext } from 'react';
 import { AppContext } from '../../routes/AppContext';
 import { useNavigate } from 'react-router-dom'
 import { logout } from '../../http/userAPI';
-import './Header.css'
+//import './Header.css'
+import classes from './Header.module.css'
 
 const Header = observer((props) => {
     const {user} = useContext(AppContext)
@@ -16,54 +17,94 @@ const Header = observer((props) => {
         navigate('/login', {replace: true})
     }
     return(
-            <div>
-                <div className="header-dark">
-                    <nav className="navbar navbar-dark navbar-expand-lg">
-                        <div className="container">
-                            <Link className="navbar-brand" to='/'>German Autopoint</Link>
-                            <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navcol-1">
-                                <span className="navbar-toggler-icon"></span>
-                            </button>
-                            <div className="collapse navbar-collapse" id="navcol-1">
-                                <div className="nav navbar-nav">
-                                    <li className="nav-item" role="presentation"><Link className="nav-link" to='/cars'>Автомобили</Link></li>
-                                    <li className="nav-item" role="presentation"><Link className="nav-link" to='/service'>Сервис</Link></li>
-                                    <li className="nav-item" role="presentation"><Link className="nav-link" to='/about'>Контакты</Link></li>
-                                    {user.isAdmin ? (
-                                        <li className="nav-item-abs" role="presentation"><Link className="nav-link" to='/admin'>Админ-панель</Link></li>
-                                    ) : ("")}
-                                 </div>
-                                <form className="form-inline mr-auto" target="_self">
-                                    {/* <div className="form-group">
-                                        <label htmlFor="search-field"></label>
-                                        <input className="form-control search-field" type="search" name="search" id="search-field"/>
-                                    </div> */}
-                                    </form>
-                                    {user.isAuth ? (
-                                        <>
-                                        <span className="navbar-text"><Link className='login' to='/user'>Мой профиль</Link></span>
-                                        <Link className="btn btn-light action-button" to='/login' onClick={handleLogOut}>Выйти</Link>
-                                        </>
-                                        
-                                    ) : (
-                                        <>
-                                        <span className="navbar-text"><Link className='login' to='/login'>Войти</Link></span>
-                                        <Link className="btn btn-light action-button" to='/register'>Зарегистрироваться</Link>
-                                        </>
-                                    )}
-                                    
-                            </div>
-                        </div>
-                    </nav>
-                    
+            <header>
+                <div className={classes['header-title']}>
+                    <Link to='/' className={classes['header-logo']}></Link>
+                    <Link to='/' className={classes['header-title-text']}>Семантический поиск нормативных документов РФ</Link>
                 </div>
-                
-            </div>
+                <div className={classes['header-search-auth']}>
+                    <div className={classes['header-search']}>
+                        {
+                            user.isAdmin ? (
+                                <>
+                                <Link to='/admin'>Админ-панель</Link>
+                                </>
+                            ) : (
+                                <>
+                                </>
+                            )
+                        }
+                        <Link to='/'>Поиск</Link>
+                    </div>
+                    
+                    <div className={classes['header-auth']}>
+                        {user.isAuth ? (
+                            <>
+                            <Link className={classes['header-auth-myprofile']} to='/user'>Личный кабинет</Link>
+                            <Link className={classes['header-auth-logout']} to='/login' onClick={handleLogOut}>Выйти</Link>
+                            </>
+                            
+                        ) : (
+                            <>
+                            <Link className={classes['header-auth-login']} to='/login'>Войти</Link>
+                            <Link className={classes['header-auth-register']} to='/register'>Зарегистрироваться</Link>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </header>
             
             
     
     );
 })
+
+// <div>
+//     <div className="header-dark">
+//         <nav className="navbar navbar-dark navbar-expand-lg">
+//             <div className="container">
+//                 <Link className="navbar-brand" to='/'>German Autopoint</Link>
+//                 <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navcol-1">
+//                     <span className="navbar-toggler-icon"></span>
+//                 </button>
+//                 <div className="collapse navbar-collapse" id="navcol-1">
+//                     <div className="nav navbar-nav">
+//                         <li className="nav-item" role="presentation"><Link className="nav-link" to='/cars'>Автомобили</Link></li>
+//                         <li className="nav-item" role="presentation"><Link className="nav-link" to='/service'>Сервис</Link></li>
+//                         <li className="nav-item" role="presentation"><Link className="nav-link" to='/about'>Контакты</Link></li>
+//                         {user.isAdmin ? (
+//                             <li className="nav-item-abs" role="presentation"><Link className="nav-link" to='/admin'>Админ-панель</Link></li>
+//                         ) : ("")}
+//                         </div>
+//                     <form className="form-inline mr-auto" target="_self">
+//                         {/* <div className="form-group">
+//                             <label htmlFor="search-field"></label>
+//                             <input className="form-control search-field" type="search" name="search" id="search-field"/>
+//                         </div> */}
+//                         </form>
+//                         {user.isAuth ? (
+//                             <>
+//                             <span className="navbar-text"><Link className='login' to='/user'>Мой профиль</Link></span>
+//                             <Link className="btn btn-light action-button" to='/login' onClick={handleLogOut}>Выйти</Link>
+//                             </>
+                            
+//                         ) : (
+//                             <>
+//                             <span className="navbar-text"><Link className='login' to='/login'>Войти</Link></span>
+//                             <Link className="btn btn-light action-button" to='/register'>Зарегистрироваться</Link>
+//                             </>
+//                         )}
+                        
+//                 </div>
+//             </div>
+//         </nav>
+        
+//     </div>
+
+//     </div>
+
+
+
 
 // const UpperDiv = observer(() => {
 //     const {user} = useContext(AppContext)
@@ -128,6 +169,8 @@ const Header = observer((props) => {
         </section>
     );
 })*/
+
+
 
 
 

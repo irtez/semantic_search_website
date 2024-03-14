@@ -72,7 +72,7 @@ const Login = observer(() => {
           </form>
           <div className='register_container'>
             <Link onClick={handleScrollToTop} to='/register' className="register">
-              <span className="button__text">Зарегистрироваться</span>
+              <span className="button__text">Регистрация</span>
               <i className="button__icon fa fa-chevron-right"></i>
             </Link>
           </div>

@@ -178,7 +178,7 @@ a:hover {
 }
 
 #register .register_container {
-	margin-top: 0;
+	justify-self: flex-end;
 }
 
 .register .button__icon {
@@ -212,7 +212,8 @@ a:hover {
 }
 
 .popup {
-	color: rgb(215, 1, 1);
+	color: rgb(255, 4, 4);
+	text-shadow: black 0 0 5px;
 	position: absolute;
 	font-weight: 700;
 	right: 17%;

@@ -1,11 +1,11 @@
 import axios from 'axios'
 
 const guestInstance = axios.create({
-    baseURL: 'https://car-dealer-server-aw8r.onrender.com'
+    baseURL: 'http://localhost:5000'
 })
 
 const authInstance = axios.create({
-    baseURL: 'https://car-dealer-server-aw8r.onrender.com'
+    baseURL: 'http://localhost:5000'
 })
 
 

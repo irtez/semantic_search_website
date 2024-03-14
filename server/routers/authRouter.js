@@ -7,7 +7,6 @@ const roleMiddleware = require('../middleware/roleMiddleware')
 router.post('/register', [
     check('email', 'Электронная почта не может быть пустой').notEmpty(),
     check('name', 'ФИО не может быть пустым').notEmpty(),
-    check('phone', 'Номер телефона не может быть пустым').notEmpty(),
     check('password', 'Пароль должен быть больше 4 символов и не более 15').isLength({min: 4, max: 15})
 ], controller.registration)
 router.post('/login', controller.login)

@@ -21,14 +21,14 @@ class authController {
                 console.log(errors)
                 return res.status(400).json({message: "Ошибка при регистрации", errors})
             }
-            const {email, name, phone, password} = req.body
+            const {email, name, password} = req.body
             const candidate = await User.findOne({email})
             if (candidate) {
                 return res.status(400).json({message: "Пользователь с такой почтой уже существует"})
             }
             const hashPass = bcrypt.hashSync(password, 7)
             const userRole = await Role.findOne({value: "USER"})
-            const user = new User({email, name, phone, password: hashPass, roles: [userRole.value]})
+            const user = new User({email, name, password: hashPass, roles: [userRole.value]})
             await user.save()
             const token = generateAccessToken(user._id, user.email, user.roles)
             return res.json({token: token})

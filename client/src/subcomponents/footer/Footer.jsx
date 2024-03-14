@@ -102,7 +102,7 @@ const ContactUs = () => {
 const Bottom = () => {
     return (
         <div className="copyrightText">
-            <p>Copyright © 2023 Student MIREA. All Rights Reserved</p>
+            <p>Copyright © 2024 Student MIREA. All Rights Reserved</p>
         </div>
     )
 }

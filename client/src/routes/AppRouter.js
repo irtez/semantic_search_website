@@ -8,17 +8,19 @@ import Register from '../sections/Register';
 import NotFound from '../sections/404/NotFound';
 import User from '../sections/User/User';
 import Admin from '../sections/Admin/Admin';
+import Search from '../sections/Search/Search';
 import { AppContext } from './AppContext.js'
 import { useContext } from 'react'
 import { observer } from 'mobx-react-lite';
 import Car from '../sections/Car/Car';
 
 const publicRoutes = [
-    {path: '/', Component: Home},
+    {path: '/', Component: Search},
     {path: '/login', Component: Login},
     {path: '/register', Component: Register},
     {path: '/cars', Component: Cars},
     {path: '/service', Component: Service},
+    {path: '/home', Component: Home},
     {path: '/about', Component: About},
     {path: '/cars/:id', Component: Car}
 ]

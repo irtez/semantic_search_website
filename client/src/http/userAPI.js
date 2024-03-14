@@ -1,15 +1,15 @@
 import { guestInstance, authInstance } from './axios'
 import jwtDecode from 'jwt-decode'
 
-export const register = async (email, name, phone, password) => {
+export const register = async (email, name, password) => {
     try {
-        const response = await guestInstance.post('auth/register', {email, name, phone, password})
+        const response = await guestInstance.post('auth/register', {email, name, password})
         const token = response.data.token
         const user = jwtDecode(token)
         localStorage.setItem('token', token)
         return user
     } catch (e) {
-        alert(e.response.data.message)
+        alert(e.response.data.message + ': ' + e.response.data.errors.errors[0].msg)
         return false
     }
 }
