@@ -11,6 +11,7 @@ import ListItemText from '@mui/material/ListItemText';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import HomeIcon from '@mui/icons-material/Home';
 import Loading from '../Loading';
+import './User.css'
 
 
 // const PrevMessages = () => {
@@ -54,12 +55,12 @@ import Loading from '../Loading';
 // }
 
 const SavedCollections = () => {
-  const [messagesData, setMessagesData] = useState(null)
+  const [collectionsData, setCollectionData] = useState(null)
   return (
     <>
     <div className={classes.allprev}>
-      {messagesData ? (
-        messagesData.map(message => {
+      {collectionsData ? (
+        collectionsData.map(collection => {
           return (
             <div className={classes.prev}>
             </div>
@@ -132,14 +133,14 @@ const User = () => {
           </ListSubheader>
         }
       >
-        <ListItemButton onClick={handleProfile}>
+        <ListItemButton selected={isSectionProfile} onClick={handleProfile}>
           <ListItemIcon >
             <HomeIcon />
           </ListItemIcon>
           <ListItemText primary="Ваши данные" />
         </ListItemButton>
         
-        <ListItemButton value="send" onClick={handleMessages}>
+        <ListItemButton selected={!isSectionProfile} onClick={handleMessages}>
           <ListItemIcon>
             <InventoryIcon />
           </ListItemIcon>

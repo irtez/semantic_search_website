@@ -8,14 +8,14 @@ import { AppContext } from '../../routes/AppContext';
 const Footer = () => {
     return (
         <>
-        <footer>
+        {/* <footer>
         <div className="container">
             <AboutUs/>
             <Quicklinks/>
             <Services/>
             <ContactUs/>
         </div>
-        </footer>
+        </footer> */}
         <Bottom/>
         </>
     )
@@ -102,7 +102,7 @@ const ContactUs = () => {
 const Bottom = () => {
     return (
         <div className="copyrightText">
-            <p>Copyright © 2024 Student MIREA. All Rights Reserved</p>
+            Copyright © 2024 Student MIREA. All Rights Reserved
         </div>
     )
 }

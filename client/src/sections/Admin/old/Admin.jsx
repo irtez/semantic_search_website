@@ -10,7 +10,88 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
+const Messages = () => {
+    const [messages, setMessages] = useState(null)
 
+    useEffect(() => {
+        getAllAdmin('opened')
+          .then(responseData => {
+            setMessages(responseData)
+          })
+          .catch(error => {
+            console.log('Error fetching data:', error)
+          })
+      }, [])
+
+    if (!messages) {
+        return <Loading/>
+    }
+
+    const handleClose = async (event) => {
+        let data = {}
+        data['id'] = event.target.value
+        data['status'] = 'closed'
+        try {
+            const newMessage = await changeStatus(data)
+            if (newMessage) {
+                alert('Обращение закрыто')
+                window.location.reload()
+            }
+        } catch (e) {
+            console.log(e)
+            alert('Ошибка')
+        }
+    }
+
+    const width = window.innerWidth
+    console.log(width)
+    const charactersPerParagraph = Math.floor(width/13.757) //108
+    return (
+        <div className={classes.userMessage}>
+            <h4>Открытые обращения пользователей</h4>
+            {messages.map(message => {
+                const date = new Date(Number(message.timestamp))
+                const paragraphs = [];
+                const paragraphCount = Math.fround(message.text.length / charactersPerParagraph)
+                for (let i = 0; i < paragraphCount; i++) {
+                    const start = i * charactersPerParagraph;
+                    const end = start + charactersPerParagraph;
+                    const paragraphText = message.text.substring(start, end);
+                    paragraphs.push(<p key={i}>{paragraphText}</p>);
+                }
+                return (
+                <div className={classes.usermsg}>
+                    <Accordion>
+                        <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls="panel1a-content"
+                        id="panel1a-header"
+                        >
+                        <Typography>Обращение по теме «{message.title}»</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                        <Typography  style={{padding: "2em", display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "flex-start"}}>
+                            <ul>
+                                <li><b>Почта пользователя:</b> {message.useremail}</li>
+                                <li><b>Имя пользователя:</b> {message.username}</li>
+                                <li><b>Телефон пользователя:</b> {message.userphone}</li>
+                                <li><b>Время отправки:</b> {String(date)}</li>
+                                <li><b>Текст:</b> 
+                                    {paragraphs}
+                                </li>
+                            </ul>
+                            <button value={message._id} onClick={handleClose}>Закрыть обращение</button>
+                        </Typography>
+                        </AccordionDetails>
+                        
+                    </Accordion>
+                </div>)
+
+            })}
+        </div>
+    )
+
+}
 
 const Admin = () => {
     //brand
@@ -130,7 +211,7 @@ const Admin = () => {
                 ) 
             }
         </div>
-        {/* <div className={classes.creation}>
+        <div className={classes.creation}>
             <p>Создание автомобиля</p>
             <form onSubmit={handleCarSubmit}>
                 <input name="carmodel" type="text" placeholder='Модель автомобиля' required/>
@@ -168,7 +249,8 @@ const Admin = () => {
                 </div>
                 ) 
             }
-        </div> */}
+        </div>
+        <Messages/>
     </section>
   );
 };
