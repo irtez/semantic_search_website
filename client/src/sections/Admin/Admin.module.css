@@ -20,10 +20,20 @@
     padding: 20px;
     border-radius: 5px;
     text-align: center;
+    width: 30vw;
 }
 
-.creation p {
+.creation-title {
     color: black;
+    padding-bottom: 12px;
+    font-size: 18px;
+}
+
+.creation-info-text {
+    color:black;
+    font-size: 12px;
+    font-style: italic;
+    margin-top: -12px;
 }
   
 .creation form {
@@ -33,7 +43,7 @@
 }
 
 .creation input,
-.creation button {
+.creation-submit-button {
     margin: 10px 0;
     padding: 10px;
     border: 1px solid black;
@@ -43,15 +53,102 @@
 
 .creation input {
     width: 300px;
+    background: white;
 }
 
-.creation button {
+.creation label {
+    color: black;
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 10px;
+    transition: .3s;
+    background: white;
+    width: 300px;
+    height: 6em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+}
+
+.creation label:hover {
+    transition: .3s;
+    background: rgb(223, 223, 223);
+    cursor: pointer;
+}
+
+.upload-file-dnd-info {
+    /* position: absolute; */
+    /* margin-top: 4.5em; */
+    opacity: .7;
+}
+
+.creation span {
+    color: red;
+}
+.preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: .5em;
+}
+.preview p {
+    color: black;
+}
+.preview h5 {
+    color: black;
+}
+.chosen-file {
+    width: 28em;
+    background: rgb(64, 253, 237);
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: .5em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    text-align: left;
+    height: fit-content;
+}
+
+
+.chosen-file-info-block {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+/* .chosen-file-name {} */
+
+.upload-file {
+    opacity: 0;
+    height: 0;
+    width: 0;
+    position: absolute;
+    bottom: 40%;
+    z-index: -1;
+
+
+}
+
+.warning {
+    color: red;
+    font-size: 14px;
+    margin-top: 1em;
+}
+
+.creation-submit-button {
     background-color: #4caf50;
     color: #fff;
     cursor: pointer;
 }
 
-.creation button:hover {
+.creation-submit-button:hover {
     background-color: #45a049;
 }
 

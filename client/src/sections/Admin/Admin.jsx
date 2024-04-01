@@ -1,176 +1,157 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import classes from './Admin.module.css'
-import { createBrand, getAllBrands } from '../../http/brandAPI';
-import { createCar } from '../../http/carAPI';
-import { getAllAdmin, changeStatus } from '../../http/messageAPI';
-import Loading from '../Loading';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import Typography from '@mui/material/Typography';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-
+import './Admin.css'
 
 
 const Admin = () => {
     //brand
-    const [selectedBrandImage, setselectedBrandImage] = useState(null)
-    const [newBrand, setnewBrand] = useState(null)
+    const [chosenFiles, setFiles] = useState([])
+    const fileInput = useRef(null)
+    const [invalidFmtWarning, setInvalidFmtWarning] = useState(false)
 
     const handleBrandSubmit = async (event) => {
         try {
             event.preventDefault()
-            const brandName = event.target.brandname.value.trim()
-            const formData = new FormData()
-            formData.append('image', selectedBrandImage)
-            formData.append('name', brandName)
-            const response = await createBrand(formData)
-            setnewBrand({name: response.name, imgurl: response.img})
-            event.target.brandname.value = ""
-            event.target.brandimg.value = ""
-            setselectedBrandImage(null)
+            
+            console.log(chosenFiles)
+            // const brandName = event.target.brandname.value.trim()
+            // const formData = new FormData()
+            // formData.append('image', selectedBrandImage)
+            // formData.append('name', brandName)
+            // const response = await createBrand(formData)
+            // setnewBrand({name: response.name, imgurl: response.img})
+            // event.target.brandname.value = ""
+            // event.target.brandimg.value = ""
+            // setselectedBrandImage(null)
         } catch (error) {
-            console.error("Error creating brand:", error)
+            console.error("Error processing files:", error)
         }
     }
-    const handleBrandImgUpload = (event) => {
-        setselectedBrandImage(event.target.files[0])
+
+    const handlePickFiles = (event) => {
+        const newFiles = Array.from(event.target.files).filter((file) => file.name.includes('.pdf'))
+        if (newFiles.length !== event.target.files.length) {
+            setInvalidFmtWarning(true)
+        }
+        else {
+            setInvalidFmtWarning(false)
+        }
+        setFiles(chosenFiles.concat(newFiles))
     }
 
-    //car
-    const [newCar, setnewCar] = useState(null)
-    const [availableBrands, setavailableBrands] = useState(null)
-    const [selectedCarImage, setselectedCarImage] = useState(null)
-    const [selectedCarBrand, setselectedCarBrand] = useState(null)
-
-    const chooseCarModel = (event) => {
-        setselectedCarBrand(event.target.value)
-    }
-
-    const chooseCarPhoto = (event) => {
-        setselectedCarImage(event.target.files[0])
-    }
-
-    const handleCarSubmit = async (event) => {
-        try {
-            event.preventDefault()
-            const formData = new FormData()
-            formData.append("name", event.target.carmodel.value.trim())
-            formData.append("year", event.target.caryear.value.trim())
-            formData.append("engine", event.target.carengine.value.trim())
-            formData.append("body", event.target.carbody.value.trim())
-            formData.append("transmission", event.target.cartransmission.value.trim())
-            formData.append("mileage", event.target.carmileage.value.trim())
-            formData.append("image", selectedCarImage)
-            formData.append("brand", selectedCarBrand)
-            formData.append("configuration", event.target.carconfig.value.trim())
-            formData.append("price", event.target.carprice.value.trim())
-            formData.append("color", event.target.carcolor.value.trim())
-            
-            const response = await createCar(formData)
-            setnewCar({
-                name: response.name,
-                year: response.year,
-                body: response.body,
-                engine: response.engine,
-                transmission: response.transmission,
-                mileage: response.mileage,
-                imgurl: response.img,
-                brand: response.brand,
-                configuration: response.configuration,
-                price: response.price,
-                color: response.color
-            })
-            setselectedCarBrand(null)
-            setselectedCarImage(null)
-            event.target.carmodel.value = ""
-            event.target.carconfig.value = ""
-            event.target.caryear.value = ""
-            event.target.carbody.value = ""
-            event.target.carengine.value = ""
-            event.target.cartransmission.value = ""
-            event.target.carmileage.value = ""
-            event.target.carimg.value = ""
-            event.target.carcolor.value = ""
-            event.target.carprice.value = ""
-            event.target.choosecarbrand.value = ""
-
-        } catch (error) {
-            console.error("Error creating car:", error)
+    const handleFileDelete = (event) => {
+        const indexToRemove = Number(event.target.dataset.value)
+        const newFiles = chosenFiles.slice().filter((_, index) => index !== indexToRemove)
+        setFiles(newFiles)  
+        if (newFiles.length === 0) {
+            fileInput.current.value = null
         }
         
+      }
 
+
+    const getPrettifiedSize = (size) => {
+        return Math.round(size / 1024**2 * 100) / 100 + ' MB'
     }
+    const [drop, setDrop] = useState(false);
 
-    useEffect(() => {
-        getAllBrands()
-          .then(responseData => {
-            setavailableBrands(responseData)
-          })
-          .catch(error => {
-            console.log('Error fetching data:', error)
-          })
-      }, [])
+    const onDragLeave = (e) => {
+        //if (disabled) return;
+        e.preventDefault()
+        setDrop(false)
+    };
+
+    const onDragOver = (e) => {
+        //if (disabled) return;
+        e.preventDefault()
+        setDrop(true)
+    };
+
+    const handleDrop = (e) => {
+        //if (disabled) return;
+        e.preventDefault()
+        setDrop(false)
+        const newFiles = Array.from(e.dataTransfer.files).filter((file) => file.name.includes('.pdf'))
+        if (newFiles.length !== e.dataTransfer.files.length) {
+            setInvalidFmtWarning(true)
+        }
+        else {
+            setInvalidFmtWarning(false)
+        }
+        setFiles(chosenFiles.concat(newFiles))
+    };
+
+    // useEffect(() => {
+    //     getAllBrands()
+    //       .then(responseData => {
+    //         setavailableBrands(responseData)
+    //       })
+    //       .catch(error => {
+    //         console.log('Error fetching data:', error)
+    //       })
+    //   }, [])
 
 
   return (
     <section id={classes.admin}>
         <div className={classes.creation}>
-            <p>Создание бренда</p>
+            <p className={classes['creation-title']}>Добавление файлов</p>
+            <p className={classes['creation-info-text']}>Выберите файлы, которые хотите добавить. Названия файлов будут сохранены в качестве имён документов.</p>
+            <p className={classes['creation-info-text']}>Вы также можете добавить комментарий для отслеживания истории добавления.</p>
+            {/* <form onSubmit={handleBrandSubmit} method='post' encType='multipart/form-data'> */}
             <form onSubmit={handleBrandSubmit}>
-                <input name="brandname" type="text" placeholder='Название бренда' required></input>
-                <input name="brandimg" type="file" onChange={handleBrandImgUpload} required/>
-                <button type="submit">Создать бренд</button>
-            </form>
-            {newBrand && (
-                <div className={classes.brandCreated}>
-                    <p>Создан новый бренд {newBrand.name}</p>
-                    <img src={newBrand.imgurl} alt="newBrand"></img>
+                <div>
+                    <label 
+                        for="doc_upload"
+                        onDrop={handleDrop}
+                        onDragOver={onDragOver}
+                        onDragLeave={onDragLeave}
+                        >
+                        <p>Выберите документы (PDF)<span>*</span></p>
+                        <p className={classes['upload-file-dnd-info']}>
+                            Или перетащите сюда файлы
+                            {(drop ? (<p className='fa fa-dropbox'></p>) : (<p></p>))}
+                        </p>
+                    </label>
+                    <input
+                        onChange={handlePickFiles}
+                        type="file"
+                        className={classes['upload-file']}
+                        id="doc_upload"
+                        name="doc_upload"
+                        accept=".pdf"
+                        multiple 
+                        required
+                        ref={fileInput}
+                    />
+                    <input name="brandname" type="text" placeholder='Комментарий (необязательно)'></input>
                 </div>
-                ) 
+                <div className={classes.preview}>
+                    {!chosenFiles.length ? (<p>Файлы не выбраны.</p>) : 
+                    (    
+                        <>  
+                        <h5>Выбранные файлы</h5>                  
+                        {chosenFiles.map((file, index) =>
+                            <div className={classes['chosen-file']}>
+                                <div className={classes['chosen-file-info-block']}>
+                                    <p className={classes['chosen-file-info']}><b>Название: </b>{file.name}</p>
+                                    <p className={classes['chosen-file-info']}><b>Размер: </b>{getPrettifiedSize(file.size)}</p>
+                                </div>
+                                <div className='fa fa-trash' data-value={index} onClick={handleFileDelete}></div>
+                            </div>
+                        )}
+                        </>
+                    )}
+                </div>
+                <button className={classes['creation-submit-button']} type="submit">Добавить файлы</button>
+            </form>
+            {invalidFmtWarning ? 
+                (<p className={classes.warning}>Некоторые файлы не были добавлены из-за неподходящего расширения</p>)
+                : 
+                (null) 
             }
         </div>
-        {/* <div className={classes.creation}>
-            <p>Создание автомобиля</p>
-            <form onSubmit={handleCarSubmit}>
-                <input name="carmodel" type="text" placeholder='Модель автомобиля' required/>
-                <input name="carconfig" type="text" placeholder='Комплектация' required/>
-                <input name="caryear" type="text" placeholder='Год выпуска' required/>
-                <input name="carengine" type="text" placeholder='Информация о двигателе' required/>
-                <input name="carbody" type="text" placeholder='Тип кузова' required/>
-                <input name="cartransmission" type="text" placeholder='Трансмиссия' required/>
-                <input name="carmileage" type="text" placeholder='Пробег' required/>
-                <input name="carimg" type="file" onChange={chooseCarPhoto} required/>
-                <input name="carcolor" type="text" placeholder='Цвет' required/>
-                <input name="carprice" type="text" placeholder='Цена' required/>
-                {availableBrands ? (
-                    <select name="choosecarbrand" onChange={chooseCarModel}>
-                        <option value="">Бренд автомобиля:</option>
-                        {availableBrands.map( item => <option value={item.name}>{item.name}</option> )}
-                    </select>
-                ) : (
-                    <p>Загрузка...</p>
-                )}
-                <button type="submit">Создать автомобиль</button>
-            </form>
-            {newCar && (
-                <div className={classes.carCreated}>
-                    <p>Создан новый автомобиль <b>{newCar.brand} {newCar.name}</b></p>
-                    <p>Комплектация: {newCar.configuration}</p>
-                    <p>Год выпуска: {newCar.year}</p>
-                    <p>Двигатель: {newCar.engine}</p>
-                    <p>Тип кузова: {newCar.body}</p>
-                    <p>Трансмиссия: {newCar.transmission}</p>
-                    <p>Пробег: {newCar.mileage} км</p>
-                    <p>Цвет: {newCar.color}</p>
-                    <p>Цена: {newCar.price} ₽</p>
-                    <img src={newCar.imgurl} alt="newBrand"></img>
-                </div>
-                ) 
-            }
-        </div> */}
     </section>
   );
 };
-//name, year, engine, body, transmission, mileage, img, brand
 export default Admin;

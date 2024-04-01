@@ -1,0 +1,21 @@
+.fa-trash {
+    padding: .6em;
+    border-radius: 5px;
+    background-color: red;
+    border: 1px solid black;
+    color: white;
+    transition: .3s;
+}
+
+.fa-trash:hover {
+    cursor: pointer;
+    background-color: rgb(225, 0, 0);
+    transition: .3s;
+}
+
+.fa-dropbox,
+.fa-file-text {
+    position: absolute;
+    margin-left: .15em;
+    margin-top: .15em;
+}
