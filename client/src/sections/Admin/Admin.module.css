@@ -142,18 +142,57 @@
     margin-top: 1em;
 }
 
+.delete-all {
+    color: red;
+    position: absolute;
+    font-size: 14px;
+    margin-top: .3em;
+    margin-left: .6em;
+}
+.delete-all:hover {
+    cursor: pointer;
+}
+
+.new-files-added {
+    color: black;
+    text-align: left;
+    margin-top: 1em;
+}
+
 .creation-submit-button {
     background-color: #4caf50;
     color: #fff;
     cursor: pointer;
 }
 
+.creation-submit-button:disabled {
+    opacity: .7;
+    cursor: not-allowed;
+}
+
 .creation-submit-button:hover {
     background-color: #45a049;
+}
+.creation-submit-button:disabled:hover {
+    background-color: #4caf50;
+    cursor: not-allowed;
 }
 
 .creation select {
     width: 300px;
+}
+
+.chosen-file-status {
+    width: 70%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: .5em;
+}
+
+.chosen-file-status select {
+    width: 90%;
 }
 
 .brandCreated {

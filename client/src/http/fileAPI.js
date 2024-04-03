@@ -1,27 +1,14 @@
 import { authInstance } from './axios'
 
-export const createBrand = async (data) => {
-    try {
-        const response = await authInstance.post('brand/create', data, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          })
-        return response.data
-    } catch (e) {
-        console.log(e.response.data.message)
-        alert(e.response.data.message)
-    }
-}
 
 export const addFiles = async (data) => {
     try {
-        const response = await authInstance.post('files/add', data, {
+        const response = await authInstance.post('file/add', data, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
-          })
-        return response.data
+        })
+        return response
     } catch (e) {
         console.log(e.response.data.message)
         alert(e.response.data.message)

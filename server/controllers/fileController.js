@@ -1,8 +1,47 @@
-const Brand = require('../models/Brand')
+const Document = require('../models/Document')
 const imgUploader = require("imgbb-uploader");
 
 
-class brandController {
+class fileController {
+    async add(req, res) {
+        try {
+            const comment = req.body.comment
+            // console.log(comment)
+            const files = Array.from(req.files)
+            const statuses = JSON.parse(req.body.statuses)
+            // добавить обработку исключений по типу существующей записи/не unique ключа
+            files.map(async (file, index) => {
+                try {
+                    const document = new Document(
+                        {
+                            docName: file.filename.slice(0, -4),
+                            docText: file.filename.slice(0, -4) + 'dfkldskfls',
+                            idPoint: index*2,
+                            status: statuses[index] || 'present',
+                            path: file.path
+                        }
+                    )
+                    await document.save()
+                } catch (e) {
+                    console.log(e)
+                    return res.status(400).json({message: "Ошибка записи в бд"})
+                }
+            })
+            
+            // files.forEach((file) => {
+            //     console.log(file.name)
+            //     console.log(file.path)
+            // })
+            
+            return res.status(200).json({message: "OK"})
+
+        } catch (e) {
+            console.log(e)
+            return res.status(400).json({message: "Add file error"})
+        }
+    }
+
+
     async create(req, res) {
         try {
             const brandName = req.body.name
@@ -74,4 +113,4 @@ class brandController {
     }
 }
 
-module.exports = new brandController()
+module.exports = new fileController()
