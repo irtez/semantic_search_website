@@ -1,27 +1,59 @@
 const Document = require('../models/Document')
-const imgUploader = require("imgbb-uploader");
+const fs = require('fs').promises
+
+async function importPdfReader() {
+    const { PdfReader } = await import('pdfreader');
+    return new PdfReader();
+}
+
+async function getText(filename, reader) {
+    let fileText = ''
+    if (filename.endsWith('.pdf')) {
+        await new Promise((resolve, reject) => {
+            reader.parseFileItems(filename, (err, item) => {
+            if (err) {
+                reject(err)
+            } else if (!item) {
+                resolve()
+            } else if (item.text) {
+                fileText += (item.text + '\n')
+            }
+            })
+        })
+    }
+    else if (filename.endsWith('.txt')) {
+        fileText = await fs.readFile(filename, 'utf8')
+    }
+    if (!fileText.length) {
+        fileText = 'empty'
+    }
+    return fileText
+}
 
 
 class fileController {
     async add(req, res) {
         try {
             const comment = req.body.comment
-            // console.log(comment)
             const files = Array.from(req.files)
             const statuses = JSON.parse(req.body.statuses)
             // добавить обработку исключений по типу существующей записи/не unique ключа
-            files.map(async (file, index) => {
+            const reader = await importPdfReader()            
+
+            files.forEach(async (file, index) => {
                 try {
+                    const fileText = await getText(file.path, reader)
                     const document = new Document(
                         {
-                            docName: file.filename.slice(0, -4),
-                            docText: file.filename.slice(0, -4) + 'dfkldskfls',
+                            name: file.filename.slice(0, -4),
+                            text: fileText,
                             idPoint: index*2,
                             status: statuses[index] || 'present',
                             path: file.path
                         }
                     )
                     await document.save()
+                    
                 } catch (e) {
                     console.log(e)
                     return res.status(400).json({message: "Ошибка записи в бд"})

@@ -1,19 +1,19 @@
 const {Schema, model} = require('mongoose')
 
 const Document = new Schema({
-    docName: {
+    name: {
         type: String,
         unique: true,
         required: true
     },
-    docText: {
+    text: {
         type: String,
         unique: false,
         required: true
     },
     idPoint: {
         type: Number,
-        unique: true,
+        unique: false,
         required: true
     },
     status: {

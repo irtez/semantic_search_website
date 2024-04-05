@@ -3,7 +3,7 @@
     align-items: center;
     justify-content: flex-start;
     flex-direction: column;
-    min-height: 100vh;
+    min-height: 110vh;
     max-height: max-content;
     padding-top: 1em;
     gap: 5em;
@@ -11,7 +11,7 @@
 
 .main {
     width: 80vw;
-    height: 95vh;
+    height: 105vh;
     background-color: white;
     border-radius: 20px;
     display: flex;
@@ -130,18 +130,19 @@
 .search-result-holder {
     width: 100%;
     height: 80%;
-
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 3em;
+    gap: 1.5em;
     padding-top: 1em;
+    padding-bottom: 1em;
+    color: black;
 }
 
 .search-result {
     width: 90%;
-    height: 90.5px;
+    height: 80px;
     border-radius: 20px;
     border: 1px solid black;
     text-align: center;
@@ -152,41 +153,73 @@
     align-items: center;
 }
 .search-result-number {
-    width: 7%;
-    height: 90px;
+    width: 5%;
+    height: 80px;
     border-radius: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 26px;
+    font-size: 22px;
     border-right: 1px solid black;
 }
 
 .search-result-doctitle {
-    height: 90px;
+    height: 80px;
     width: 20%;
     border-radius: 20px;
     border-right: 1px solid black;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-    text-decoration: underline;
-    color: rgb(58, 57, 116);
+    font-size: 15px;
+    /* text-decoration: underline; */
+    /* color: rgb(58, 57, 116); */
+    color: blue;
+}
+
+.search-result-doctitle p {
+    margin: 0;
 }
 
 .search-result-doctitle:hover {
     cursor: pointer;
 }
 
+.search-result-docstatus {
+    width: 7%;
+    height: 80px;
+    font-size: 12px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20px;
+    border-right: 1px solid black;
+}
+
+.search-result-docstatus p {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
 
 .search-result-doctext {
-    height: 90px;
-    width: 73%;
-    padding: 10px;
+    height: 80px;
+    width: 67%;
+    padding: 5px;
     text-align: justify;
     font-size: 12px;
+
+    
 }
+.search-result-doctext p {
+    margin: 0;
+    padding: 0;
+}
+
+
 .search-pages {
     width: 100%;
     height: 4em;
