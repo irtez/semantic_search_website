@@ -8,15 +8,16 @@ a:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    /* height: 100vh; */
 }
 
 .spinner {
-    width: 7em;
-    height: 7em;
+    /* width: 7em;
+    height: 7em; */
     position: relative;
     margin: 0 auto;
 }
+
 
 .circle {
     width: 100%;

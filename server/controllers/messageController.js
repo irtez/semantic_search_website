@@ -76,7 +76,6 @@ class messageController {
         try {
             const status = req.body.status
             const id = req.params.id
-            console.log(status, id)
             const msg = await Message.findById(id)
             if (!msg) {
                 return res.status(404).json({message: "Message not found"})

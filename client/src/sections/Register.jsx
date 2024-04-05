@@ -59,7 +59,11 @@ const Register = observer(() => {
   }
 
   if (isLoading) {
-    return <Loading/>
+    return (
+      <section id="register">
+        <Loading/>
+      </section>
+    )
   }
 
   return (

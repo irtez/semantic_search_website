@@ -73,7 +73,6 @@ const PrevMessages = () => {
     if (event.target.value !== "all") {
       const status = event.target.value
       const data = await getAllUser(status)
-      console.log(data)
       setMessagesData(data)
     }
   }

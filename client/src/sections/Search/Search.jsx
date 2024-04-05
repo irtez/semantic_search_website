@@ -5,6 +5,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import TextField from '@mui/material/TextField';
 import Pagination from '@mui/material/Pagination';
 import { searchText } from '../../http/searchAPI'
+import Loading from '../Loading'
 
 
 const statuses = {
@@ -25,6 +26,7 @@ const Search = () => {
   const [foundFiles, setFoundFiles] = useState([])
   const [curPage, setCurPage] = useState(1)
   const [notFound, setNotFound] = useState(false)
+  const [isLoading, setLoading] = useState(false)
 
   const handleTypeChange = (event) => {
     setSearchType(event.target.value)
@@ -52,9 +54,7 @@ const Search = () => {
       end = text.length + 1
     }
     const viewedText = text.slice(start, end)
-    console.log('321')
     const indexes = [...viewedText.matchAll(new RegExp(query, 'gi'))].map(a => a.index)
-    console.log('321', indexes)
     let now = 0
     indexes.forEach((index) => {
       newText += viewedText.slice(now, index)
@@ -70,12 +70,10 @@ const Search = () => {
 
 
   const Search = async (e) => {
-    if (!searchQuery) {
+    if ((!searchQuery) || (searchQuery.length < 0) || (searchQuery === oldQuery)) {
       return
     }
-    if (searchQuery.length < 0) {
-      return
-    }
+    setLoading(true)
     if (searchType === 'text') {
       const response = await searchText(searchQuery)
       if (response.status === 200) {
@@ -85,6 +83,7 @@ const Search = () => {
         if (!files.length) {
           setNotFound(true)
         }
+        setLoading(false)
       }      
     }
     else {
@@ -132,25 +131,27 @@ const Search = () => {
             </div>
           </div>
           <div className={classes['search-result-holder']}>
-            {foundFiles.length ? 
+            {isLoading ? (<Loading height='3em' marginTop='6em' spinnerSize='5em'/>) : ('')}
+            {((foundFiles.length) && (!isLoading)) ? 
               (foundFiles[curPage - 1].map((file, index) => 
               <div className={classes['search-result']}>
-                <div className={classes['search-result-number']}>
-                  {index + 1}
+                <div className={classes['search-result-number']} dataAttr={`Совпадений: ${file.nameMatches + file.textMatches}`}>
+                  <p>{index + 1}</p>
                 </div>
                 <div className={classes['search-result-doctitle']}>
-                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(file.name, oldQuery, 150, '') }}/>
+                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(file._doc.name, oldQuery, 150, '') }}/>
                 </div>
                 <div className={classes['search-result-docstatus']}>
-                  <p>{statuses[file.status]}</p>
+                  <p>{statuses[file._doc.status]}</p>
                 </div>
                 <div className={classes['search-result-doctext']}>
-                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(file.text, oldQuery, 200, '...') }}/>
+                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(file._doc.text, oldQuery, 200, '...') }}/>
                 </div>
               </div>
               ))
             :
-            (notFound ? (<p>Ничего не найдено.</p>) : (<p>Введите запрос.</p>))
+            (isLoading ? ('') : (notFound ? (<p>Ничего не найдено.</p>) : (<p>Введите запрос.</p>)))
+            
             }
           </div>
           <div className={classes['search-pages']}>

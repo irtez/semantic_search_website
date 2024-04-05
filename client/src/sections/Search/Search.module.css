@@ -163,6 +163,13 @@
     border-right: 1px solid black;
 }
 
+.search-result-number p {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
 .search-result-doctitle {
     height: 80px;
     width: 20%;
@@ -219,6 +226,19 @@
     padding: 0;
 }
 
+/* .search-result-match-num {
+    
+} */
+
+.search-result-number::after {
+    font-size: 12px;
+    color: grey;
+    position: absolute;
+    margin-bottom: 3em;
+    content: attr(dataattr);
+    margin-bottom: 6%;
+    margin-left: 5%;
+}
 
 .search-pages {
     width: 100%;

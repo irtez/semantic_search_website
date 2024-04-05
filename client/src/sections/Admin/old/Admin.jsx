@@ -44,7 +44,6 @@ const Messages = () => {
     }
 
     const width = window.innerWidth
-    console.log(width)
     const charactersPerParagraph = Math.floor(width/13.757) //108
     return (
         <div className={classes.userMessage}>

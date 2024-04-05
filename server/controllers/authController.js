@@ -13,6 +13,14 @@ const generateAccessToken = (id, email, roles) => {
     return jwt.sign(payload, process.env.secret, {expiresIn: "24h"})
 }
 
+function sleep(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+      currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+  }
+
 class authController {
     async registration(req, res) {
         try {
@@ -52,6 +60,7 @@ class authController {
                 return res.status(400).json({message: "Неверный пароль"})
             }
             const token = generateAccessToken(user._id, user.email, user.roles)
+            // sleep(3000)
             return res.json({token: token})
         } catch (e) {
             console.log(e)

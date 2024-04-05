@@ -46,7 +46,11 @@ const Login = observer(() => {
   };
 
   if (isLoading) {
-    return <Loading/>
+    return (
+      <section id="login">
+        <Loading/>
+      </section>
+    )
   }
 
   return (
