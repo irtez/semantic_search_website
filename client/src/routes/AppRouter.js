@@ -9,6 +9,7 @@ import NotFound from '../sections/404/NotFound';
 import User from '../sections/User/User';
 import Admin from '../sections/Admin/Admin';
 import Search from '../sections/Search/Search';
+import Document from '../sections/Document/Document'
 import { AppContext } from './AppContext.js'
 import { useContext } from 'react'
 import { observer } from 'mobx-react-lite';
@@ -22,7 +23,8 @@ const publicRoutes = [
     {path: '/service', Component: Service},
     {path: '/home', Component: Home},
     {path: '/about', Component: About},
-    {path: '/cars/:id', Component: Car}
+    {path: '/cars/:id', Component: Car},
+    {path: '/docs/:id', Component: Document}
 ]
 
 const userRoutes = [

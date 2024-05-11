@@ -1,22 +1,16 @@
-//const Car = require('../models/Car')
 const Document = require('../models/Document')
 
 function escapeRegex(str) {
     return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-function sleep(milliseconds) {
-    const date = Date.now();
-    let currentDate = null;
-    do {
-      currentDate = Date.now();
-    } while (currentDate - date < milliseconds);
-  }
 
 function sortFiles(files, query) {
     return files.map(file => {
-        const nameMatches = (file.name.match(new RegExp(query, 'gi')) || []).length;
-        const textMatches = (file.text.match(new RegExp(query, 'gi')) || []).length;
+        const numberMatches = (file.gost_number.match(new RegExp(query, 'gi')) || []).length;
+        const titleMatches = (file.title.match(new RegExp(query, 'gi')) || []).length;
+        const nameMatches = numberMatches + titleMatches;
+        const textMatches = (file.text_plain.match(new RegExp(query, 'gi')) || []).length;
         return {...file, nameMatches, textMatches};
     }).sort((a, b) => (b.nameMatches + b.textMatches) - (a.nameMatches + a.textMatches));
 }
@@ -25,21 +19,26 @@ class searchController {
     
     async text(req, res) {
         try {
-            const filesPerPage = 3
+            const filesPerPage = 5
+            const maxLength = 100
             const query = escapeRegex(req.query.query)
 
             const files = await Document.find({
                 $or: [
-                    {name: {$regex: query, $options: 'i'}},
-                    {text: {$regex: query, $options: 'i'}}
+                    {gost_number: {$regex: query, $options: 'i'}},
+                    {title: {$regex: query, $options: 'i'}},
+                    {text_plain: {$regex: query, $options: 'i'}}
                 ]
             })
             const sortedFiles = sortFiles(files, query)
             const paginatedFiles = []
-            for (let i = 0; i < sortedFiles.length; i += filesPerPage) {
+            let curMaxLength = maxLength
+            if (sortedFiles.length < maxLength) {
+                curMaxLength = sortedFiles.length
+            }
+            for (let i = 0; i < curMaxLength; i += filesPerPage) {
                 paginatedFiles.push(sortedFiles.slice(i, i + filesPerPage))
             }
-            sleep(500)
             return res.status(200).json({message: 'OK', files: paginatedFiles})
         } catch (e) {
             console.log(e)

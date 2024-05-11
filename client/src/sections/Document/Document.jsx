@@ -1,174 +1,100 @@
 import React, { useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import Typography from '@mui/material/Typography';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import classes from './Document.module.css'
 import { useParams, useNavigate } from 'react-router-dom';
-import { getOne, delOne, updateOne } from '../../http/carAPI';
+import { getOne, downloadOne } from '../../http/fileAPI';
 import Loading from '../Loading';
 import { useContext } from 'react';
 import { AppContext } from '../../routes/AppContext';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import '@react-pdf-viewer/core/lib/styles/index.css';
 
 
 const Document = () => {
     const { id } = useParams()
     const [doc, setDoc] = useState(null)
     const [isEditing, setIsEditing] = useState(false)
+    const [fileUrl, setFileUrl] = useState(null)
     const navigate = useNavigate()
     const { user } = useContext(AppContext)
     useEffect(() => {
         getOne(id)
           .then(responseData => {
             if (!responseData) {
-                navigate('/cars', { replace: true })
+                navigate('/', { replace: true })
             }
-            setCar(responseData)
+            setDoc(responseData.data)
           })
           .catch(error => {
             console.log('Error fetching data:', error)
           })
       }, [id, navigate])
 
+      useEffect(() => {
+        downloadOne(id)
+          .then(responseData => {
+            if (!responseData) {
+              setFileUrl('not found')
+            }
+            else {
+              setFileUrl(URL.createObjectURL(responseData.data))
+            }
+          })
+          .catch(error => {
+            console.log('Error fetching data:', error)
+          })
+      }, [id])
+
     
-    const handleDelete = async(event) => {
-      try {
-        const data = await delOne(id)
-        if (data) {
-          alert('Автомобиль удален из каталога')
-          navigate('/cars', { replace: true })
-        }
-      } catch (e) {
-        console.log(e)
-        alert('Ошибка при удалении')
-      }
-    }
-
-    const handleChange = async(event) => {
-      setIsEditing(!isEditing)
-    }
-    
-    const changePrice = async(event) => {
-      try {
-        let data = {}
-        data['id'] = id
-        data['price'] = event.target.newprice.value.trim()
-        const newCar = await updateOne(data)
-        if (newCar) {
-          window.location.reload()
-        }
-      } catch (e) {
-        alert('Ошибка при изменении цены')
-        console.log(e)
-      }
-    }
-
-    const handleScrollToTop = () => {
-      window.scrollTo({
-        top: 0
-      })
-    }
-
-    if (!car) {
+    if (!(doc && fileUrl)) {
         return <Loading/>
     }
-    let fuelLower = car.engine.split(', ')[1]
-    let fuel = fuelLower.charAt(0).toUpperCase() + fuelLower.slice(1)
+    
+
+
   return (
-    <section id={classes.car}>
-      <div className={classes.carfull}>
-        <div className={classes.carimg}>
-            <img src={car.img} alt={car.name + " photo"} border="0"/>
-        </div>
-        <div className={classes.carspecs}></div>
-        <Accordion style={{
-            width: "100%",
-            background: "linear-gradient(90deg, rgba(102,99,159,0.5999649859943977) 0%, rgba(72,72,156,0.5383403361344538) 64%, rgba(10,47,205,0.5999649859943977) 100%)",
-            fontFamily: "Georgia, serif"}}>
-            <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel1a-content"
-            id="panel1a-header"
-            >
-            <Typography><b>Общая информация</b></Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-            <Typography>
-                <p>Производитель: {car.brand}</p>
-                <p>Год выпуска: {car.year}</p>
-                <p>Цвет: {car.color}</p>
-                <p>Комплектация: {car.configuration}</p>
-                <p>Пробег: {car.mileage} км</p>
-            </Typography>
-            </AccordionDetails>
-        </Accordion>
-        <Accordion style={{
-            width: "100%",
-            borderBottomLeftRadius: "20px",
-            borderBottomRightRadius: "20px",
-            background: "linear-gradient(90deg, rgba(102,99,159,0.5999649859943977) 0%, rgba(72,72,156,0.5383403361344538) 64%, rgba(10,47,205,0.5999649859943977) 100%)",
-            fontFamily: "Georgia, serif"}}>
-            <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel2a-content"
-            id="panel2a-header"
-            >
-            <Typography><b>Технические характеристики</b></Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-            <Typography>
-                <p>Объем двигателя: {car.engine.split(', ')[0]}</p>
-                <p>Мощность двигателя: {car.engine.split(', ')[2]}</p>
-                <p>Топливо: {fuel}</p>
-                <p>Тип кузова: {car.body}</p>
-                <p>Трансмиссия: {car.transmission}</p>
-            </Typography>
-            </AccordionDetails>
-        </Accordion>
-      </div>
-      <div className={classes.carinfo}>
-        {(isEditing && user.isAdmin) ? (<i id={classes.deletebutton} className='fa fa-trash' onClick={handleDelete}></i>) : ("")}
-        {user.isAdmin ? (
-          <i id={classes.editbutton} className='fa fa-edit' onClick={handleChange}></i>
-        ) : ("")}
-        <h3>{car.brand} {car.name}</h3>
-        <h4>{car.configuration}</h4>
-        <div className={classes.infoimgs}>
-            <div className={classes.carinfoimg}>
-                <img alt="engine" src={engine}></img>
-                <p>{car.engine}</p>
-            </div>
-            <div className={classes.carinfoimg}>
-                <img alt="odometer" src={odometer}></img>
-                <p>{car.mileage} км</p>
-            </div>
-            <div className={classes.carinfoimg}>
-                <img alt="body" src={bodytype}></img>
-                <p>{car.body}</p>
-            </div>
-            <div className={classes.carinfoimg}>
-                <img alt="kpp" src={kpp}></img>
-                <p>{car.transmission}</p>
-            </div>
-        </div>
-        {(user.isAdmin && isEditing) ? (
-          <form onSubmit={changePrice}>
-            <input name="newprice" type="text" placeholder='Введите новую цену' required/>
-            <button type='submit'>Изменить цену</button>
-          </form>
-        ) : (<h3 className={classes.carprice}>{car.price.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} ₽</h3>)}
-        {user.isAuth ? 
-        (
-          <Link onClick={handleScrollToTop} to='/user'>Получить предложение</Link>
+    <section id={classes.doc}>
+      <div className={classes['doc-info']}>
+        <p><b>Наименование:</b> {doc.gost_number + '. ' + doc.title}</p>
+        <p><b>Статус:</b> {doc.status}</p>
+        <p><b>Дата принятия:</b> {doc.date_start}</p>
+        <p><b>Дата отмены:</b> {doc.date_cancel}</p>
+        <p><b>Замнен на:</b> {doc.replaced_by}</p>
+        <p><b>Основной раздел ОКС:</b> {doc.main_section}</p>
+        <p><b>Подраздел ОКС:</b> {doc.subsection}</p>
+        <p><b>ОКС:</b> {doc.OKS}</p>
+        {
+          (fileUrl !== 'not found') ? (
+            <p>
+              <b>Скачать:</b> <a href={fileUrl} download={doc.filename}>{doc.filename}</a>
+            </p>
           ) : (
-          <Link onClick={handleScrollToTop} to='/login'>Получить предложение</Link>
-        )}
+            <p>Файл отсутствует.</p>
+          )
+
+        }
         
       </div>
+
+      <div className={classes['doc-text']}>
+        <p className={classes['doc-text-title']}>ТЕКСТ ДОКУМЕНТА</p>
+        {(fileUrl !== 'not found') ? (
+            doc.filename.endsWith('.pdf') ? 
+              (<Worker workerUrl="/pdf.worker.min.js">
+              <Viewer fileUrl={fileUrl} />
+              </Worker>)
+              :
+              (<p dangerouslySetInnerHTML={
+                  { __html: doc.text_markdown}
+                }></p>)
+          ) : (
+            <p dangerouslySetInnerHTML={
+              { __html: doc.text_markdown}
+            }></p>
+          )}
+      </div>
     </section>
-  );
-};
+  )
+}
 
 export default Document;

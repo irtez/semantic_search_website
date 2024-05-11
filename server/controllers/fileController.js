@@ -1,5 +1,9 @@
 const Document = require('../models/Document')
 const fs = require('fs').promises
+const pdf2html = require('pdf2html')
+const path = require('path')
+
+
 
 async function importPdfReader() {
     const { PdfReader } = await import('pdfreader');
@@ -69,34 +73,49 @@ class fileController {
 
         } catch (e) {
             console.log(e)
-            return res.status(400).json({message: "Add file error"})
+            return res.status(400).json({message: "Ошибка при добавлении документа"})
         }
     }
 
 
-    async create(req, res) {
+    async getOne(req, res) {
         try {
-            const brandName = req.body.name
-            const candidate = await Brand.findOne({name: brandName})
-            if (candidate) {
-                return res.status(400).json({message: "Бренд с таким названием уже существует"})
+            const docId = req.params.docId
+            let doc = await Document.findById(docId)
+            if (!doc) {
+                return res.status(500).json({message: 'Запрашиваемый файл не найден'})
             }
-            const response = await imgUploader(process.env.imgKey, req.file.path)
-            if (!response) {
-                return res.status(400).json({message: "Ошибка загрузки изображения на сервер"})
-            }
-            const imgURL = response.url
-            try {
-                const brand = new Brand({name: brandName, img: imgURL})
-                brand.save()
-                res.status(200).json(brand)
-            } catch (e) {
-                console.log(e)
-                return res.status(400).json({message: "Ошибка записи в бд"})
-            }
+            // doc = doc.toObject()
+            // let docMarkup = ''
+            // if (doc.path.endsWith('.pdf')) {
+            //     const pages = await pdf2html.pages(doc.path)
+            //     pages.forEach((page) => { docMarkup += page })
+            // }
+            // else if (doc.path.endsWith('.txt')) {
+            //     docMarkup = doc.text
+            // }
+            // doc.markup = docMarkup
+            return res.status(200).json(doc)
         } catch (e) {
             console.log(e)
-            return res.status(400).json({message: "Create brand error"})
+            return res.status(400).json({message: 'Ошибка загрузки документа'})
+        }
+    }
+
+    async downloadOne(req, res) {
+        try {
+            const docId = req.params.docId
+            const doc = await Document.findById(docId)
+            if (!doc) {
+                return res.status(500).json({message: 'Запрашиваемый файл не найден'})
+            }
+            // res.setHeader('Content-Type', 'application/octet-stream')
+            // res.setHeader('Content-Disposition', `attachment; filename="${doc.name}.ext"`)
+            res.sendFile(path.join(__dirname, '..', 'uploads/' + doc.filename))
+
+        } catch (e) {
+            console.log(e)
+            return res.status(400).json({message: 'Ошибка при загрузке файла'})
         }
     }
 
