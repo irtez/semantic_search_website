@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { getMe, updateUser } from '../../http/userAPI'
-import { useContext } from 'react';
-import { AppContext } from '../../routes/AppContext';
+import { createCollection, getCollections } from '../../http/collectionAPI'
+// import { useContext } from 'react';
+// import { AppContext } from '../../routes/AppContext';
 import classes from './User.module.css' 
 import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
@@ -54,19 +55,22 @@ import './User.css'
 //   )
 // }
 
-const SavedCollections = () => {
-  const [collectionsData, setCollectionData] = useState(null)
+const SavedCollections = (props) => {
+  const userCollections = props.collections
+  console.log(userCollections)
+  
   return (
     <>
     <div className={classes.allprev}>
-      {collectionsData ? (
-        collectionsData.map(collection => {
+      {userCollections.length ? (
+        userCollections.map(collection => {
           return (
             <div className={classes.prev}>
+              <p>{collection.name}</p>
             </div>
           )
         })
-      ) : (<p>Ничего не найдено.</p>)}
+      ) : (<p>У вас пока нет созданных коллекций.</p>)}
     </div>
     </>
   )
@@ -75,7 +79,11 @@ const SavedCollections = () => {
 const User = () => {
     const [data, setData] = useState(null)
     const [isSectionProfile, setViewedSection] = useState(true)
-    const { user } = useContext(AppContext)
+    const [isCreateExpanded, setIsCreateExpanded] = useState(false)
+    const [newCollectionName, setNewCollectionName] = useState('')
+    const [latestCollectionCreated, setLatestCollectionCreated] = useState('')
+    const [collectionsData, setCollectionsData] = useState([])
+    // const { user } = useContext(AppContext)
     useEffect(() => {
         getMe()
           .then(responseData => {
@@ -85,6 +93,17 @@ const User = () => {
             console.log('Error fetching data:', error)
           })
       }, [])
+    
+    useEffect(() => {
+      getCollections()
+        .then(responseData => {
+          console.log(responseData)
+          setCollectionsData(responseData)
+        })
+        .catch(error => {
+          console.log('Error fetching data:', error)
+        })
+    }, [])
 
     if (!data) {
         return (
@@ -112,12 +131,28 @@ const User = () => {
           window.location.reload()
     }
 
-  const handleProfile = (event) => {
+  const createNewCollection = async (e) => {
+    const response = await createCollection({collectionName: newCollectionName})
+    if (response.status === 200) {
+      setLatestCollectionCreated(response.data.name)
+      const userCollections = [...collectionsData]
+      userCollections.push(response.data)
+      setCollectionsData(userCollections)
+    }
+  }
+
+  const handleProfile = (e) => {
     setViewedSection(true)
   }
-  const handleMessages = (event) => {
+  const handleMessages = (e) => {
     setViewedSection(false)
   }
+
+  const handleExpand = (e) => {
+    setIsCreateExpanded(!isCreateExpanded)
+    setLatestCollectionCreated('')
+  }
+
 
   return (
     <section id={classes.user}>
@@ -177,13 +212,36 @@ const User = () => {
       ) : (
           <>
           <div className={classes.prevmessages}>
-            <h1>Ваши коллекции</h1>
-            <SavedCollections/>
+          <h1>Ваши коллекции</h1>
+            <div className={classes.title}>
+              <div className={classes['create-button']}>
+                <button onClick={handleExpand}>➕ Создать коллекцию</button>
+                {
+                  isCreateExpanded ? (
+                    <div className={classes['collection-create']}>
+                      <input 
+                        type='text' 
+                        placeholder='Название коллекции' 
+                        onChange={(e) => setNewCollectionName(e.target.value)}
+                      ></input>
+                      {!latestCollectionCreated ? (
+                        <button onClick={createNewCollection}>Создать</button>
+                      ) : (
+                        <p>Создана новая коллекция "{latestCollectionCreated}"</p>
+                      )
+                      }
+                      
+                    </div>
+                  ) : (
+                    ''
+                  )
+                }
+              </div>
+            </div>
+            <SavedCollections collections={collectionsData}/>
           </div>
           </>
         )}
-      
-        
       </div>
     </section>
   )

@@ -1,19 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
+import { AppContext } from '../../routes/AppContext'
 import classes from './Search.module.css'
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import TextField from '@mui/material/TextField';
 import Pagination from '@mui/material/Pagination';
-import { searchText } from '../../http/searchAPI'
+import { searchDocs } from '../../http/searchAPI'
 import Loading from '../Loading'
+import { Link } from 'react-router-dom'
 
-
-const statuses = {
-  'present': 'Действует',
-  'accepted': 'Принят',
-  'cancelled': 'Отменён',
-  'replaced': 'Заменён'
-}
+const documentsPerPage = 5
 
 function escapeRegex(str) {
   return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -23,23 +19,54 @@ const Search = () => {
   const [searchType, setSearchType] = useState('text')
   const [searchQuery, setSearchQuery] = useState('')
   const [oldQuery, setOldQuery] = useState(null)
-  const [foundFiles, setFoundFiles] = useState([])
+  const [oldSearchType, setOldSearchType] = useState(null)
+  const [searchTime, setSearchTime] = useState(null)
+  const [foundDocuments, setFoundDocuments] = useState([])
   const [curPage, setCurPage] = useState(1)
   const [notFound, setNotFound] = useState(false)
   const [isLoading, setLoading] = useState(false)
+  const [docsToSave, setDocToSave] = useState([])
+  
+  const {user} = useContext(AppContext)
 
   const handleTypeChange = (event) => {
     setSearchType(event.target.value)
   }
+
+  const handleCollectionSave = (e) => {
+    console.log(user.isAuth)
+  }
   
+  const getTitleMatch = (text, query, maxTitleLength, ellipsis) => {
+    const index = text.toLowerCase().indexOf(query.toLowerCase())
+    if (index === -1) {
+      return text.slice(0, maxTitleLength) + ellipsis
+    }
+    query = escapeRegex(query)
+    const queryLength = query.length
+    let newText = ''
+    const viewedText = text.slice(0, maxTitleLength)
+    const indexes = [...viewedText.matchAll(new RegExp(query, 'gi'))].map(a => a.index)
+    let now = 0
+    indexes.forEach((index) => {
+      newText += viewedText.slice(now, index)
+      newText += ('<b>' + viewedText.slice(index, index + queryLength) + '</b>')
+      now = index + queryLength
+    })
+    newText += viewedText.slice(indexes[indexes.length - 1] + queryLength, viewedText.length)
+    if (maxTitleLength > text.length) {
+      newText += '...'
+    }
+    return newText
+  }
+
   const getQueryMatch = (text, query, windowSize, ellipsis) => {
     const index = text.toLowerCase().indexOf(query.toLowerCase())
-    query = escapeRegex(query)
-    
     if (index === -1) {
       return text.slice(0, windowSize*2) + ellipsis
     }
     const queryLength = query.length
+    query = escapeRegex(query)
     let newText = ellipsis
     if (index === 0) { newText = '' }
     let start = index - windowSize
@@ -70,25 +97,33 @@ const Search = () => {
 
 
   const Search = async (e) => {
-    if ((!searchQuery) || (searchQuery.length < 0) || (searchQuery === oldQuery)) {
+    if ((!searchQuery) || (searchQuery.length < 0) || ((searchQuery === oldQuery) && (searchType === oldSearchType))) {
       return
     }
+    const startTime = performance.now() / 1000
+    setSearchTime(null)
     setLoading(true)
-    if (searchType === 'text') {
-      const response = await searchText(searchQuery)
-      if (response.status === 200) {
-        const files = response.data.files
-        setOldQuery(searchQuery)
-        setFoundFiles(files)
-        if (!files.length) {
-          setNotFound(true)
-        }
-        setLoading(false)
-      }      
+    setFoundDocuments([])
+    setCurPage(1)
+    setNotFound(false)
+    const response = await searchDocs(searchQuery, searchType)
+    if (response.status === 200) {
+      const documents = response.data.documents
+
+      setOldQuery(searchQuery)
+      if (!documents.length) {
+        setNotFound(true)
+        setFoundDocuments([])
+      }
+      else {
+        setFoundDocuments(documents)
+      }
+      
+      setOldSearchType(searchType)
+      const elapsedTime = Math.round((performance.now() / 1000 - startTime) * 100) / 100
+      setSearchTime(elapsedTime)
     }
-    else {
-      alert('Пошел нахуй')
-    }
+    setLoading(false)
   }
 
   return (
@@ -120,32 +155,60 @@ const Search = () => {
                   Search('')
                 }
               }}
+              dataAttr={
+                (searchTime ? (`Время поиска: ${searchTime} сек.`) 
+                : 
+                (''))
+              }
             />
             <i onClick={Search} className='fa fa-search'></i>
           </div>
         </div>
         <div className={classes['search-results']}>
           <div className={classes['search-save']}>
-            <div className={classes['search-save-button']}>
+            <button 
+              className={classes['search-save-button']}
+              onClick={handleCollectionSave}
+              disabled={!user.isAuth}
+              title={!user.isAuth ? "Сохранение доступно только авторизованным пользователям" : ''}
+            >
               Сохранить результаты поиска
-            </div>
+            </button>
           </div>
           <div className={classes['search-result-holder']}>
             {isLoading ? (<Loading height='3em' marginTop='6em' spinnerSize='5em'/>) : ('')}
-            {((foundFiles.length) && (!isLoading)) ? 
-              (foundFiles[curPage - 1].map((file, index) => 
+            {((foundDocuments.length) && (!isLoading)) ? 
+              (foundDocuments[curPage - 1].map((document, index) => 
               <div className={classes['search-result']}>
-                <div className={classes['search-result-number']} dataAttr={`Совпадений: ${file.nameMatches + file.textMatches}`}>
-                  <p>{index + 1}</p>
+                <div 
+                  className={classes['search-result-number']} 
+                  dataAttr={
+                    ((oldSearchType === 'text') ? (`Совпадений: ${document.numMatches}`) 
+                    : 
+                    (`Совпадает на: ${document.similarity_score}%`))
+                  }
+                >
+                  <p>{(curPage - 1) * documentsPerPage + index + 1}</p>
                 </div>
                 <div className={classes['search-result-doctitle']}>
-                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(file._doc.name, oldQuery, 150, '') }}/>
+                  <Link
+                   dangerouslySetInnerHTML={
+                    { __html: getTitleMatch(document._doc.gost_number + '. ' + document._doc.title, oldQuery, 80, '...') }
+                  }
+                   onClick={() => {
+                      window.scrollTo({
+                        top: 0
+                      })
+                    }
+                   }
+                   to={'/docs/' + document._doc._id}
+                  />
                 </div>
                 <div className={classes['search-result-docstatus']}>
-                  <p>{statuses[file._doc.status]}</p>
+                  <p>{document._doc.status}</p>
                 </div>
                 <div className={classes['search-result-doctext']}>
-                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(file._doc.text, oldQuery, 200, '...') }}/>
+                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(document._doc.text_plain, oldQuery, 180, '...') }}/>
                 </div>
               </div>
               ))
@@ -156,7 +219,7 @@ const Search = () => {
           </div>
           <div className={classes['search-pages']}>
             <Pagination 
-              count={foundFiles.length || 1} 
+              count={foundDocuments.length || 1} 
               color="primary" 
               page={curPage}
               onChange={(e, value) => {setCurPage(value)}}

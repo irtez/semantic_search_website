@@ -1,8 +1,8 @@
 import { guestInstance } from './axios'
 
-export const searchText = async (searchQuery) => {
+export const searchDocs= async (searchQuery, searchType) => {
     try {
-        const response = await guestInstance.get(`search/text`, {params: {
+        const response = await guestInstance.get(`search/${searchType}`, {params: {
             'query': searchQuery
         }})
         return response
