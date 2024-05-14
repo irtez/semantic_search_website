@@ -8,7 +8,6 @@ const search = require('./searchRouter')
 
 const router = new express.Router()
 router.use('/auth', auth)
-router.use('/car', car)
 router.use('/file', file)
 router.use('/collection', collection)
 router.use('/search', search)

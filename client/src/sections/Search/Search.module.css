@@ -119,27 +119,67 @@
 }
 
 .search-save-button {
-    width: fit-content;
-    height: fit-content;
+    width: 240px;
+    height: 40px;
     background-color: bisque;
     border-radius: 10px;
     border: 1px solid black;
     padding: .5em;
     transition: .3s;
     color: black;
+    z-index: 2;
 
+}
+.search-save-button::after {
+    width: 250px;
+    height: 10px;
+    font-size: 12px;
+    color: red;
+    position: absolute;
+    content: attr(dataattr);
+    /* margin-left: -215px;
+    margin-top: -28px; */
+    top: 318px;
+    /* right: 146px; */
+    left: 1122px;
+    text-align: left;
 }
 .search-save-button:hover {
     cursor: pointer;
     background-color: rgb(176, 152, 123);
     transition: .3s;
 }
-
 .search-save-button:disabled:hover {
     background-color: bisque;
     cursor: not-allowed;
 }
-
+.choosing-collection {
+    position: absolute;
+    background-color: ivory;
+    border: 1px solid black;
+    width: 240px;
+    height: 150px;
+    z-index: 1;
+    padding-top: 40px;
+    border-radius: 11px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+    color: black;
+}
+.choosing-collection button {
+    border-radius: 5px;
+    border: 1px solid black;
+    padding: .15em;
+}
+.choosing-collection button:hover {
+    cursor: pointer;
+}
+.choosing-collection button:disabled:hover {
+    cursor: not-allowed;
+}
 .search-result-holder {
     width: 100%;
     height: 90%;
@@ -175,7 +215,10 @@
     font-size: 22px;
     border-right: 1px solid black;
 }
-
+.search-result-number .choose-document {
+    position: absolute;
+    margin-right: 90px;
+}
 .search-result-number p {
     display: flex;
     justify-content: center;

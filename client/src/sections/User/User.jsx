@@ -10,8 +10,14 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import Typography from '@mui/material/Typography';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HomeIcon from '@mui/icons-material/Home';
 import Loading from '../Loading';
+import { Link } from 'react-router-dom'
 import './User.css'
 
 
@@ -57,16 +63,44 @@ import './User.css'
 
 const SavedCollections = (props) => {
   const userCollections = props.collections
-  console.log(userCollections)
+  
   
   return (
     <>
     <div className={classes.allprev}>
       {userCollections.length ? (
-        userCollections.map(collection => {
+        userCollections.map(col => {
           return (
             <div className={classes.prev}>
-              <p>{collection.name}</p>
+              <Accordion>
+                <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel1a-content"
+                id="panel1a-header"
+                >
+                <Typography>Коллекция «{col.name}» (документов: {col.documents.length} )</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                <Typography  style={
+                  {
+                    padding: "2em", 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    justifyContent: "flex-start", 
+                    alignItems: "flex-start"
+                  }
+                }>
+                    <ul>
+                      {col.documents.map(doc => {
+                        // return <li><b>Почта пользователя:</b> {message.useremail}</li>
+                        return <li><Link to={'/docs/' + doc._id}>хуй</Link></li>
+                      })
+                      }
+                    </ul>
+                    <button value={col._id} onClick={null}>Удалить коллекцию</button>
+                </Typography>
+                </AccordionDetails>
+            </Accordion>
             </div>
           )
         })
@@ -222,7 +256,8 @@ const User = () => {
                       <input 
                         type='text' 
                         placeholder='Название коллекции' 
-                        onChange={(e) => setNewCollectionName(e.target.value)}
+                        onChange={(e) => setNewCollectionName(e.target.value.substring(0,20))}
+                        value={newCollectionName}
                       ></input>
                       {!latestCollectionCreated ? (
                         <button onClick={createNewCollection}>Создать</button>

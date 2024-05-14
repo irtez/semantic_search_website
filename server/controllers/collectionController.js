@@ -2,6 +2,15 @@ const Collection = require('../models/Collection')
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
 
+
+function sleep(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+      currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+  }
+
 class collectionController {
     async create(req, res) {
         try {
@@ -58,33 +67,36 @@ class collectionController {
         }
     }
 
-    // async getAllAdmin(req, res) {
-    //     try {
-    //         const status = req.params.status
-    //         const messages = await Message.find({status})
-    //         return res.status(200).json(messages)
-            
-    //     } catch (e) {
-    //         console.log(e)
-    //         return res.status(400).json({message: "Get messages error"})
-    //     }
-    // }
 
-    // async changeStatus(req, res) {
-    //     try {
-    //         const status = req.body.status
-    //         const id = req.params.id
-    //         const msg = await Message.findById(id)
-    //         if (!msg) {
-    //             return res.status(404).json({message: "Message not found"})
-    //         }
-    //         const newMessage = await msg.updateOne({status: status})
-    //         return res.status(200).json(newMessage)
-    //     } catch (e) {
-    //         console.log(e)
-    //         return res.status(400).json({message: "Update error"})
-    //     }
-    // }
+    async editCollection(req, res) {
+        try {
+            const collectionId = req.params.id
+            const collection = await Collection.findById(collectionId)
+            if (!collection) {
+                return res.status(400).json({message: "Выбранная коллекция не найдена"})
+            }
+            const presentDocs = collection.documents
+            const docsToAdd = req.body.add
+            const docsToDelete = req.body.delete
+            if (docsToAdd) {
+                docsToAdd.forEach((docId) => {
+                if (!presentDocs.includes(docId)) {
+                    presentDocs.push(docId);
+                }
+                })
+            }
+            if (docsToDelete) {
+                presentDocs.filter((docId) => !docsToDelete.includes(docId))
+            }
+            collection.documents = presentDocs
+            await collection.save()
+
+            return res.status(200).json({collection})
+        } catch (e) {
+            console.log(e)
+            return res.status(400).json({message: "Update error"})
+        }
+    }
 
 }
 

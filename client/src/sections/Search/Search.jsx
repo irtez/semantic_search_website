@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { AppContext } from '../../routes/AppContext'
 import classes from './Search.module.css'
 import ToggleButton from '@mui/material/ToggleButton';
@@ -8,6 +8,13 @@ import Pagination from '@mui/material/Pagination';
 import { searchDocs } from '../../http/searchAPI'
 import Loading from '../Loading'
 import { Link } from 'react-router-dom'
+import Checkbox from '@mui/material/Checkbox'
+import { getCollections, editCollection } from '../../http/collectionAPI'
+import Alert from '@mui/material/Alert';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 
 const documentsPerPage = 5
 
@@ -25,7 +32,29 @@ const Search = () => {
   const [curPage, setCurPage] = useState(1)
   const [notFound, setNotFound] = useState(false)
   const [isLoading, setLoading] = useState(false)
-  const [docsToSave, setDocToSave] = useState([])
+  const [docsToSave, setDocsToSave] = useState([])
+  const [isChoosingDocs, setIsChoosingDocs] = useState(false)
+  const [chosenCollection, setChosenCollection] = useState(null)
+  const [isChoosingCollection, setIsChoosingCollection] = useState(false)
+  const [userCollections, setUserCollections] = useState([])
+  const [noCollectionAlert, setNoCollectionAlert] = useState(false)
+  const [isCollectionUpdated, setIsCollectionUpdated] = useState(false)
+  const [isUpdatePending, setIsUpdatePending] = useState(false)
+  const [tooSmallQueryWarning, setTooSmallQueryWarning] = useState(false)
+
+  useEffect(() => {
+    getCollections()
+      .then(responseData => {
+        const collections = responseData.map(({_id, name}) => ({_id, name}))
+        setUserCollections(collections)
+        if (collections) {
+          setChosenCollection(collections[0])
+        }
+      })
+      .catch(error => {
+        console.log('Error fetching data:', error)
+      })
+  }, [])
   
   const {user} = useContext(AppContext)
 
@@ -33,8 +62,57 @@ const Search = () => {
     setSearchType(event.target.value)
   }
 
-  const handleCollectionSave = (e) => {
-    console.log(user.isAuth)
+  const handleChoosingCollection = (e) => {
+    if (!userCollections.length ) {
+      setNoCollectionAlert(true)
+      if (isChoosingDocs) setIsChoosingDocs(false)
+      if (isChoosingCollection) setIsChoosingCollection(false)
+    }
+    else if (!isChoosingDocs & !isChoosingCollection) {
+      setIsChoosingDocs(true)
+    }
+    else if (isChoosingDocs & !isChoosingCollection) {
+      if (docsToSave.length) {
+        setIsChoosingCollection(true)
+      }
+      else {
+        setIsChoosingDocs(false)
+      }
+    }
+    else if (isChoosingDocs & isChoosingCollection) {
+      setDocsToSave([])
+      setIsChoosingCollection(false)
+      setIsChoosingDocs(false)
+    }
+  }
+
+  const handleCollectionSave = async (e) => {
+    setIsUpdatePending(true)
+    const response = await editCollection({
+      collectionId: chosenCollection._id,
+      add: docsToSave
+    })
+    if (response.status === 200) {
+      setIsCollectionUpdated(true)
+      setDocsToSave([])
+      setIsChoosingCollection(false)
+      setIsChoosingDocs(false)
+      setChosenCollection(null)
+    }
+    setIsUpdatePending(false)
+  }
+
+  const handleDocInclude = (e) => {
+    const document_id = e.target.value
+    if (e.target.checked) {
+      const docs = [...docsToSave]
+      docs.push(document_id)
+      setDocsToSave(docs)
+    }
+    else {
+      const newDocs = docsToSave.filter(doc => doc !== document_id)
+      setDocsToSave(newDocs)
+    }
   }
   
   const getTitleMatch = (text, query, maxTitleLength, ellipsis) => {
@@ -100,6 +178,10 @@ const Search = () => {
     if ((!searchQuery) || (searchQuery.length < 0) || ((searchQuery === oldQuery) && (searchType === oldSearchType))) {
       return
     }
+    if (searchQuery.length < 3) {
+      setTooSmallQueryWarning(true)
+      return
+    }
     const startTime = performance.now() / 1000
     setSearchTime(null)
     setLoading(true)
@@ -128,6 +210,56 @@ const Search = () => {
 
   return (
     <section id={classes.search}>
+      <div style={{position: 'absolute', height: '100%', width: '30%'}}>
+        {
+          noCollectionAlert ? (
+            <Alert 
+              severity="error" 
+              onClose={() => {setNoCollectionAlert(false)}}
+              sx={{
+                position: 'sticky',
+                zIndex: 3,
+                top: 60,
+                border: '1px solid red'
+              }}
+            >
+              У вас нет созданных коллекций. Вы можете их создать в личном кабинете.
+            </Alert>
+          ) : ('')
+        }
+        {
+          isCollectionUpdated ? (
+            <Alert 
+              severity="success" 
+              onClose={() => {setIsCollectionUpdated(false)}}
+              sx={{
+                position: 'sticky',
+                zIndex: 3,
+                top: 60,
+                border: '1px solid green'
+              }}
+            >
+              Коллекция обновлена.
+            </Alert>
+          ) : ('')
+        }
+        {
+          tooSmallQueryWarning ? (
+            <Alert 
+              severity="error" 
+              onClose={() => {setTooSmallQueryWarning(false)}}
+              sx={{
+                position: 'sticky',
+                zIndex: 3,
+                top: 60,
+                border: '1px solid red'
+              }}
+            >
+              Минимальная длина запроса - 3 символа.
+            </Alert>
+          ) : ('')
+        }
+      </div>
       <div className={classes.main}>
         <div className={classes['main-header']}>
           Поиск документов
@@ -168,12 +300,59 @@ const Search = () => {
           <div className={classes['search-save']}>
             <button 
               className={classes['search-save-button']}
-              onClick={handleCollectionSave}
+              onClick={handleChoosingCollection}
               disabled={!user.isAuth}
               title={!user.isAuth ? "Сохранение доступно только авторизованным пользователям" : ''}
+              dataAttr={
+                isChoosingCollection ? (
+                  'Выберите название коллекции'
+                ) : (
+                  isChoosingDocs ? (
+                    docsToSave.length ? (
+                      `Выбрано документов: ${docsToSave.length} `
+                    ) : ('Выберите документы для сохранения')
+                  ) : ('')
+                )
+              }
             >
-              Сохранить результаты поиска
+              {!isChoosingCollection ? ('Сохранить результаты поиска') : ('Отменить')}
             </button>
+            
+            {
+                isChoosingCollection ? (
+                <div className={classes['choosing-collection']}>
+                  {
+                    !isUpdatePending ? (
+                      <>
+                      <FormControl variant="standard" sx={{ width: 120 }}>
+                        <InputLabel>Название коллекции</InputLabel>
+                        <Select
+                          value={chosenCollection ? (chosenCollection._id) : (userCollections[0]._id)}
+                          onChange={(e) => {
+                            setChosenCollection(
+                              userCollections.filter(col => col._id === e.target.value)[0]
+                            )
+                            }}
+                          label="Название"
+                        >
+                          {userCollections.map(collection => {
+                            return <MenuItem value={collection._id}>{collection.name}</MenuItem>
+                          })}
+                        </Select>
+                      </FormControl>
+                      <button 
+                        onClick={handleCollectionSave}
+                        disabled={!docsToSave.length}
+                        title={docsToSave.length ? ('') : ('Выберите документы.')}
+                      >
+                        Добавить
+                      </button>
+                      </>
+                    ) : (<Loading height='100px' spinnerSize='50px'/>)
+                }
+                </div>
+                ) : ('')
+            }
           </div>
           <div className={classes['search-result-holder']}>
             {isLoading ? (<Loading height='3em' marginTop='6em' spinnerSize='5em'/>) : ('')}
@@ -183,11 +362,21 @@ const Search = () => {
                 <div 
                   className={classes['search-result-number']} 
                   dataAttr={
-                    ((oldSearchType === 'text') ? (`Совпадений: ${document.numMatches}`) 
+                    ((oldSearchType === 'text') ? (document.numMatches ? (`Совпадений: ${document.numMatches}`) : (''))
                     : 
                     (`Совпадает на: ${document.similarity_score}%`))
                   }
                 >
+                  {isChoosingDocs ? (
+                    <div className={classes['choose-document']}>
+                      <Checkbox 
+                        color="success" 
+                        checked={docsToSave.includes(document._doc._id)}
+                        onClick={handleDocInclude}
+                        value={document._doc._id}
+                      />
+                    </div>
+                  ) : (' ')}
                   <p>{(curPage - 1) * documentsPerPage + index + 1}</p>
                 </div>
                 <div className={classes['search-result-doctitle']}>
