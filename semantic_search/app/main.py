@@ -84,9 +84,7 @@ async def search_documents(
     ]
 
     gc.collect()
-
-    # Return response
-    return documents #json.dumps(documents)
+    return documents
 
 
 @app.get('/about')

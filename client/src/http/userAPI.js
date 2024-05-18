@@ -62,7 +62,7 @@ export const getMe = async () => {
 export const updateUser = async (newData) => {
     try {
         //console.log('userapi', field, value)
-        const newUser = await authInstance.patch('auth/updateuser', {newData})
+        const newUser = await authInstance.patch('auth', {newData})
         return newUser.data.changed
     } catch (e) {
         alert(e.response.data.message)

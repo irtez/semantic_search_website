@@ -1,7 +1,7 @@
 const {Schema, model} = require('mongoose')
 
 const Collection = new Schema({
-    userId: {
+    user_id: {
         type: String,
         unique: false,
         required: true

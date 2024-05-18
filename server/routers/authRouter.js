@@ -13,6 +13,6 @@ router.post('/login', controller.login)
 router.get('/check', controller.check)
 router.get('/users', roleMiddleware(['USER', 'ADMIN']), controller.getUsers)
 router.get('/getme', controller.getMe)
-router.patch('/updateuser', controller.updateUser)
+router.patch('', controller.updateUser)
 
 module.exports = router

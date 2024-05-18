@@ -17,6 +17,7 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 
 const documentsPerPage = 5
+const maxDocuments = 30
 
 function escapeRegex(str) {
   return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -41,11 +42,12 @@ const Search = () => {
   const [isCollectionUpdated, setIsCollectionUpdated] = useState(false)
   const [isUpdatePending, setIsUpdatePending] = useState(false)
   const [tooSmallQueryWarning, setTooSmallQueryWarning] = useState(false)
+  const [tooMuchDocsWarning, setTooMuchDocsWarning] = useState(false)
 
   useEffect(() => {
     getCollections()
       .then(responseData => {
-        const collections = responseData.map(({_id, name}) => ({_id, name}))
+        const collections = responseData.collections.map(({_id, name, documents}) => ({_id, name, documents}))
         setUserCollections(collections)
         if (collections) {
           setChosenCollection(collections[0])
@@ -97,7 +99,10 @@ const Search = () => {
       setDocsToSave([])
       setIsChoosingCollection(false)
       setIsChoosingDocs(false)
-      setChosenCollection(null)
+      const updatedCollections = userCollections.map(collection =>
+        collection._id === chosenCollection._id ? response.data.collection : collection
+      )
+      setUserCollections(updatedCollections)
     }
     setIsUpdatePending(false)
   }
@@ -105,9 +110,14 @@ const Search = () => {
   const handleDocInclude = (e) => {
     const document_id = e.target.value
     if (e.target.checked) {
-      const docs = [...docsToSave]
-      docs.push(document_id)
-      setDocsToSave(docs)
+      if (docsToSave.length >= maxDocuments) {
+        setTooMuchDocsWarning(true)
+      }
+      else {
+        const docs = [...docsToSave]
+        docs.push(document_id)
+        setDocsToSave(docs)
+      }
     }
     else {
       const newDocs = docsToSave.filter(doc => doc !== document_id)
@@ -223,7 +233,24 @@ const Search = () => {
                 border: '1px solid red'
               }}
             >
-              У вас нет созданных коллекций. Вы можете их создать в личном кабинете.
+              У вас нет созданных коллекций. Вы можете их создать в
+               <Link className={classes['warning-link']} to={`/user?section=collections`}>личном кабинете</Link>.
+            </Alert>
+          ) : ('')
+        }
+        {
+          tooMuchDocsWarning ? (
+            <Alert 
+              severity="error" 
+              onClose={() => {setTooMuchDocsWarning(false)}}
+              sx={{
+                position: 'sticky',
+                zIndex: 3,
+                top: 60,
+                border: '1px solid red'
+              }}
+            >
+              Вы можете выбрать не более {maxDocuments} документов.
             </Alert>
           ) : ('')
         }
@@ -336,14 +363,24 @@ const Search = () => {
                           label="Название"
                         >
                           {userCollections.map(collection => {
-                            return <MenuItem value={collection._id}>{collection.name}</MenuItem>
+                            return <MenuItem value={collection._id}>
+                              {collection.name} ({collection.documents.length}/{maxDocuments})
+                            </MenuItem>
                           })}
                         </Select>
                       </FormControl>
                       <button 
                         onClick={handleCollectionSave}
-                        disabled={!docsToSave.length}
-                        title={docsToSave.length ? ('') : ('Выберите документы.')}
+                        disabled={
+                          (!docsToSave.length) || (chosenCollection.documents.length + docsToSave.length > maxDocuments)
+                        }
+                        title={docsToSave.length ? 
+                          (
+                            (chosenCollection.documents.length + docsToSave.length > maxDocuments) ? (
+                              'Слишком много документов.'
+                            ) : ('')
+                          ) : ('Выберите документы.')
+                        }
                       >
                         Добавить
                       </button>
@@ -362,18 +399,19 @@ const Search = () => {
                 <div 
                   className={classes['search-result-number']} 
                   dataAttr={
-                    ((oldSearchType === 'text') ? (document.numMatches ? (`Совпадений: ${document.numMatches}`) : (''))
-                    : 
-                    (`Совпадает на: ${document.similarity_score}%`))
+                    // ((oldSearchType === 'text') ? (document.numMatches ? (`Совпадений: ${document.numMatches}`) : (''))
+                    // : 
+                    // (`Совпадает на: ${document.similarity_score}%`))
+                    `Относительная релевантность: ${document.score}%`
                   }
                 >
                   {isChoosingDocs ? (
                     <div className={classes['choose-document']}>
                       <Checkbox 
                         color="success" 
-                        checked={docsToSave.includes(document._doc._id)}
+                        checked={docsToSave.includes(document._id)}
                         onClick={handleDocInclude}
-                        value={document._doc._id}
+                        value={document._id}
                       />
                     </div>
                   ) : (' ')}
@@ -382,7 +420,7 @@ const Search = () => {
                 <div className={classes['search-result-doctitle']}>
                   <Link
                    dangerouslySetInnerHTML={
-                    { __html: getTitleMatch(document._doc.gost_number + '. ' + document._doc.title, oldQuery, 80, '...') }
+                    { __html: getTitleMatch(document.gost_number + '. ' + document.title, oldQuery, 80, '...') }
                   }
                    onClick={() => {
                       window.scrollTo({
@@ -390,14 +428,14 @@ const Search = () => {
                       })
                     }
                    }
-                   to={'/docs/' + document._doc._id}
+                   to={'/docs/' + document._id}
                   />
                 </div>
                 <div className={classes['search-result-docstatus']}>
-                  <p>{document._doc.status}</p>
+                  <p>{document.status}</p>
                 </div>
                 <div className={classes['search-result-doctext']}>
-                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(document._doc.text_plain, oldQuery, 180, '...') }}/>
+                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(document.text_plain, oldQuery, 180, '...') }}/>
                 </div>
               </div>
               ))

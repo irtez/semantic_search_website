@@ -36,3 +36,13 @@ export const editCollection = async (data) => {
         alert(e.response.data.message)
     }
 }
+
+export const deleteCollection = async (collectionId) => {
+    try {
+        const response = await authInstance.delete(`collection/${collectionId}`)
+        return response
+    } catch (e) {
+        console.log(e.response.data.message)
+        alert(e.response.data.message)
+    }
+}

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import classes from './Admin.module.css'
 import './Admin.css'
-import { addFiles } from '../../http/fileAPI'
+import { addDocuments } from '../../http/documentAPI'
 //import { FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material'
 
 
@@ -25,7 +25,7 @@ const Admin = () => {
             formData.append('comment', comment)
             formData.append('statuses', JSON.stringify(docStatuses))
 
-            const response = await addFiles(formData)
+            const response = await addDocuments(formData)
             // console.log(response)
             if (response.status === 200) {
                 setNewFilesAdded(chosenFiles)

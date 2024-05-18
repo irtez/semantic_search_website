@@ -11,7 +11,7 @@ def ort_tokenize(text: str, tokenizer: Any) -> dict:
     }
     return ort_inputs
 
-def average_pool(ort_outs: np.ndarray, ort_inputs: dict, normalize: bool = True):
+def average_pool(ort_outs: np.ndarray, ort_inputs: dict, normalize: bool = True) -> torch.Tensor:
     last_hidden_states = torch.Tensor(ort_outs[0])
     attention_mask = torch.Tensor(ort_inputs['attention_mask'])
     last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)

@@ -53,7 +53,6 @@ class authController {
             const user = await User.findOne({email})
             if (!user) {
                 return res.status(400).json({message: `Пользователь с почтой ${email} не найден`})
-
             }
             const validPass = bcrypt.compareSync(password, user.password)
             if (!validPass) {
@@ -70,6 +69,9 @@ class authController {
 
     async check(req, res) {
         try {
+            if (!req.headers.authorization) {
+                return res.status(400).json({message: 'Пользователь не авторизован'})
+            }
             const token = req.headers.authorization.split(' ')[1]
             try {
                 jwt.verify(token, process.env.secret)

@@ -40,6 +40,9 @@ function sortDocuments(documents, query) {
         return {...document, numMatches};
     }).sort((a, b) => (b.numMatches) - (a.numMatches));
 }
+function sortDocsByScores(documents) {
+    return documents.sort((a, b) => (b.score) - (a.score));
+}
 
 function paginateDocuments(documents) {
     const paginatedDocuments = []
@@ -58,46 +61,52 @@ class searchController {
     async textSearch(req, res) {
         try {
             const query = req.query.query
-
-            // const documents = await Document.find({
-            //     $or: [
-            //         {gost_number: {$regex: query, $options: 'i'}},
-            //         {title: {$regex: query, $options: 'i'}},
-            //         {text_plain: {$regex: query, $options: 'i'}}
-            //     ]
-            // })
+            if (!query) {
+                return res.status(400).json({message: "Поисковый запрос отсутствует"})
+            }
             const documents = await Document.find(
-                { $text: { $search: query } }
+                { $text: { $search: query } },
+                { score: { $meta: "textScore" } },
+                { concurrent: true }
             )
             .select('_id gost_number title status text_plain')
             .limit(maxLength)
+            .lean()
             
-            const sortedDocuments = sortDocuments(documents, query)
-            const paginatedDocuments = paginateDocuments(sortedDocuments)
+            const sortedDocs = sortDocsByScores(documents)
+            const maxScore = sortedDocs.length > 0 ? sortedDocs[0].score : 1
+        
+            const normalizedResults = sortedDocs.map(doc => ({
+                ...doc,
+                score: Math.round(doc.score / maxScore * 10000) / 100
+            }))
+                  
+            const paginatedDocuments = paginateDocuments(normalizedResults)
             
-            return res.status(200).json({message: 'OK', documents: paginatedDocuments})
+            return res.status(200).json({documents: paginatedDocuments})
         } catch (e) {
             console.log(e)
             return res.status(400).json({message: 'Text search error'})
         }
-        
     }
 
     async semanticSearch(req, res) {
         try {
-            
             const query = req.query.query
-
+            if (!query) {
+                return res.status(400).json({message: "Поисковый запрос отсутствует"})
+            }
             const response = await getSimilarDocuments(query)
             
             if (!response.ok) {
-                return res.status(400).json({message: 'Cant connect to semantic search module'})
+                return res.status(400).json({message: 'Ошибка соединения с модулем семантического поиска'})
             }
             const documents = await response.json()
 
             const documentIds = documents.map(doc => doc.document_id)
             const foundDocuments = await Document.find(
-                { _id: { $in: documentIds } }
+                { _id: { $in: documentIds } },
+                { concurrent: true }
             )
             .select('_id gost_number title status text_plain')
             .limit(maxLength)
@@ -108,16 +117,16 @@ class searchController {
             })
 
             const docWithScore = documents.map(doc => ({
-                _doc: documentsById[doc.document_id.toString()],
-                similarity_score: Math.round(doc.similarity_score * 10000) / 100
+                ...documentsById[doc.document_id.toString()],
+                score: Math.round(doc.similarity_score * 10000) / 100
               }))
 
             const paginatedDocuments = paginateDocuments(docWithScore)
 
-            return res.status(200).json({message: 'OK', documents: paginatedDocuments})
+            return res.status(200).json({documents: paginatedDocuments})
         } catch (e) {
             console.log(e)
-            return res.status(400).json({message: 'Text search error'})
+            return res.status(400).json({message: 'Ошибка семантического поиска'})
         }
     }
 

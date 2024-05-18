@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getMe, updateUser } from '../../http/userAPI'
-import { createCollection, getCollections } from '../../http/collectionAPI'
+import { createCollection, getCollections, deleteCollection, editCollection } from '../../http/collectionAPI'
 // import { useContext } from 'react';
 // import { AppContext } from '../../routes/AppContext';
 import classes from './User.module.css' 
@@ -17,87 +17,155 @@ import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HomeIcon from '@mui/icons-material/Home';
 import Loading from '../Loading';
-import { Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import Checkbox from '@mui/material/Checkbox'
 import './User.css'
 
 
-// const PrevMessages = () => {
-//   const [messagesData, setMessagesData] = useState(null)
-//   const handleChange = async (event) => {
-//     if (event.target.value !== "all") {
-//       const status = event.target.value
-//       const data = await getAllUser(status)
-//       console.log(data)
-//       setMessagesData(data)
-//     }
-//   }
-//   const width = window.innerWidth
-//   const charactersPerParagraph = Math.floor(width/24.77)
-//   return (
-//     <>
-//     <div className={classes.allprev}>
-//       {messagesData ? (
-//         messagesData.map(message => {
-//           const paragraphs = [];
-//           const paragraphCount = Math.fround(message.text.length / charactersPerParagraph)
-//           for (let i = 0; i < paragraphCount; i++) {
-//             const start = i * charactersPerParagraph;
-//             const end = start + charactersPerParagraph;
-//             const paragraphText = message.text.substring(start, end);
-//             paragraphs.push(<p key={i}>{paragraphText}</p>);
-//           }
-//           return (
-//             <div className={classes.prev}>
-//               <h4>▶Обращение №{messagesData.indexOf(message)+1}</h4>
-//               <p><b>Тема:</b> {message.title}</p>
-//               <p><b>Текст:</b></p>
-//               {paragraphs}
-//             </div>
-//           )
-//         })
-//       ) : (<p>Ничего не найдено.</p>)}
-//     </div>
-//     </>
-//   )
-// }
+const maxCollections = 5
+const maxDocuments = 30
 
 const SavedCollections = (props) => {
   const userCollections = props.collections
+  const setCollections = props.editCollectionsFn
+  const [collectionToDelete, setCollectionToDelete] = useState(null)
+  const [docsToDelete, setDocsToDelete] = useState([])
+  const [isDeletingDocs, setIsDeletingDocs] = useState(false)
+  const [isDeletionPending, setIsDeletionPending] = useState(false)
   
+  const handleDeleteCollection = async (e) => {
+    setIsDeletionPending(true)
+    const response = await deleteCollection(collectionToDelete)
+    if (response.status === 200) {
+      const updatedCollections = userCollections.filter(col => col._id !== collectionToDelete)
+      setCollections([...updatedCollections])
+      setCollectionToDelete(null)
+    }
+    setIsDeletionPending(false)
+  }
+
+  const handleDocSelect = (e) => {
+    const docId = e.target.value
+    if (docsToDelete.includes(docId)) {
+      console.log(docsToDelete)
+      setDocsToDelete([...docsToDelete.filter(doc => doc !== docId)])
+    }
+    else {
+      setDocsToDelete([...docsToDelete, docId])
+    }
+  }
+  
+  const handleDocDelete = (e) => {
+    if (!isDeletingDocs) {
+      setIsDeletingDocs(true)
+    }
+    else {
+      setDocsToDelete([])
+      setIsDeletingDocs(false)
+    }
+  }
+
+  const deleteDocs = async (colId) => {
+    setIsDeletionPending(true)
+    const response = await editCollection({
+      collectionId: colId,
+      delete: docsToDelete
+    })
+    if (response.status === 200) {
+      setIsDeletingDocs(false)
+      setDocsToDelete([])
+      
+      const curCollection = userCollections.filter(col => col._id === colId)[0]
+      const updatedDocs = curCollection.documents.filter(doc => !docsToDelete.includes(doc.id))
+      const updatedCollections = userCollections.map(collection =>
+        collection._id === colId ? { ...collection, documents: updatedDocs } : collection
+      )
+      setCollections(updatedCollections)
+    }
+    setIsDeletionPending(false)
+  }
   
   return (
-    <>
-    <div className={classes.allprev}>
+    <div className={classes['collection']}>
       {userCollections.length ? (
         userCollections.map(col => {
           return (
-            <div className={classes.prev}>
-              <Accordion>
+            <div className={classes['collection-inner']}>
+              <Accordion style={{
+                borderRadius: "10px", 
+                boxShadow: "0px 0px 8px 0px rgba(34, 60, 80, 0.49)",
+                width: "100%"
+              }}>
                 <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="panel1a-content"
                 id="panel1a-header"
+                style = {{border: "1px solid black", borderRadius: "10px"}}
                 >
-                <Typography>Коллекция «{col.name}» (документов: {col.documents.length} )</Typography>
+                <Typography >
+                  Коллекция «{col.name}» (документов: {col.documents.length}/{maxDocuments})
+                </Typography>
                 </AccordionSummary>
-                <AccordionDetails>
-                <Typography  style={
+                <AccordionDetails >
+                <Typography style={
                   {
-                    padding: "2em", 
+                    padding: "3em", 
                     display: "flex", 
                     flexDirection: "column", 
                     justifyContent: "flex-start", 
                     alignItems: "flex-start"
                   }
                 }>
+                  {!isDeletionPending ? 
+                  (<>{col.documents.length > 0 ? (
+                    <div className={classes['delete-docs']}>
+                      <button onClick={handleDocDelete}>
+                        {!isDeletingDocs ? ('Удалить документы') : ('Отменить удаление')}
+                      </button>
+                      {docsToDelete.length > 0 ? (
+                        <p className='fa fa-trash' style={{marginLeft: "10px"}} onClick={() => deleteDocs(col._id)}></p>
+                      ) : ('')}
+                    </div>
+                  ) : ('')}
                     <ul>
                       {col.documents.map(doc => {
-                        // return <li><b>Почта пользователя:</b> {message.useremail}</li>
-                        return <li><Link to={'/docs/' + doc._id}>хуй</Link></li>
-                      })
+                          return <li>
+                                {isDeletingDocs ? (
+                                <div className={classes['choose-document']}>
+                                  <Checkbox 
+                                    color="error" 
+                                    checked={docsToDelete.includes(doc.id)}
+                                    onClick={handleDocSelect}
+                                    value={doc.id}
+                                  />
+                                </div>
+                              ) : ('')}
+                                <Link 
+                                  to={'/docs/' + doc.id}
+                                  onClick={() => {window.scrollTo({top: 0})}}
+                                >
+                                  ○ {doc.gost_number}. {doc.title} ({doc.status})
+                                </Link>
+                            </li>
+                          
+                        })
                       }
                     </ul>
-                    <button value={col._id} onClick={null}>Удалить коллекцию</button>
+                    <div className={classes['collection-delete']}>
+                      <button onClick={() => setCollectionToDelete(col._id)}>Удалить коллекцию</button>
+                      {collectionToDelete ? (
+                        <div className={classes['delete-confirmation']}>
+                          <p>Удалить?</p>
+                          <p className='fa fa-trash' onClick={() => handleDeleteCollection()}></p>
+                          <p className='fa fa-times'onClick={() => setCollectionToDelete(null)}></p>
+                        </div>
+                      ) : ('')}
+                    </div></>) : (
+                      <div className={classes['doc-delete-loading']}>
+                        <Loading height='6em' spinnerSize='6em'/>
+                      </div>
+                    )
+                  }
                 </Typography>
                 </AccordionDetails>
             </Accordion>
@@ -106,16 +174,17 @@ const SavedCollections = (props) => {
         })
       ) : (<p>У вас пока нет созданных коллекций.</p>)}
     </div>
-    </>
   )
 }
 
 const User = () => {
     const [data, setData] = useState(null)
-    const [isSectionProfile, setViewedSection] = useState(true)
+    const [viewedSection, setViewedSection] = useState(true)
     const [isCreateExpanded, setIsCreateExpanded] = useState(false)
     const [newCollectionName, setNewCollectionName] = useState('')
     const [latestCollectionCreated, setLatestCollectionCreated] = useState('')
+    const navigate = useNavigate()
+    const location = useLocation()
     const [collectionsData, setCollectionsData] = useState([])
     // const { user } = useContext(AppContext)
     useEffect(() => {
@@ -131,15 +200,20 @@ const User = () => {
     useEffect(() => {
       getCollections()
         .then(responseData => {
-          console.log(responseData)
-          setCollectionsData(responseData)
+          setCollectionsData(responseData.collections)
         })
         .catch(error => {
           console.log('Error fetching data:', error)
         })
     }, [])
 
-    if (!data) {
+    useEffect(() => {
+      const params = new URLSearchParams(location.search)
+      const section = params.get('section')
+      setViewedSection(section || 'data')
+    }, [location.search])
+
+    if (!data || !collectionsData) {
         return (
             <Loading/>
         )
@@ -149,8 +223,7 @@ const User = () => {
         event.preventDefault()
         const field = event.target[0].attributes.name.value.trim()
         let value = event.target[0].value.trim()
-        
-
+      
         let c = {}
         c[field] = value
         if (field === "password") {
@@ -175,17 +248,19 @@ const User = () => {
     }
   }
 
-  const handleProfile = (e) => {
-    setViewedSection(true)
-  }
-  const handleMessages = (e) => {
-    setViewedSection(false)
-  }
 
   const handleExpand = (e) => {
     setIsCreateExpanded(!isCreateExpanded)
     setLatestCollectionCreated('')
   }
+
+  const handleSectionChange = (newSection) => {
+    console.log(newSection)
+    const params = new URLSearchParams(window.location.search)
+    params.set('section', newSection)
+    navigate(`?${params.toString()}`, { replace: true })
+  }
+
 
 
   return (
@@ -202,14 +277,14 @@ const User = () => {
           </ListSubheader>
         }
       >
-        <ListItemButton selected={isSectionProfile} onClick={handleProfile}>
+        <ListItemButton selected={viewedSection === 'data'} onClick={() => handleSectionChange('data')}>
           <ListItemIcon >
             <HomeIcon />
           </ListItemIcon>
           <ListItemText primary="Ваши данные" />
         </ListItemButton>
-        
-        <ListItemButton selected={!isSectionProfile} onClick={handleMessages}>
+
+        <ListItemButton selected={viewedSection === 'collections'} onClick={() => handleSectionChange('collections')}>
           <ListItemIcon>
             <InventoryIcon />
           </ListItemIcon>
@@ -220,7 +295,7 @@ const User = () => {
       <div className={classes.back}>
       </div>
       <div className={classes.usermain}>
-      {isSectionProfile ? (
+      {(viewedSection === 'data') ? (
         
           <div className={classes.usercard}>
             <h4><b>Ваши данные</b></h4>  
@@ -245,11 +320,19 @@ const User = () => {
         
       ) : (
           <>
-          <div className={classes.prevmessages}>
-          <h1>Ваши коллекции</h1>
-            <div className={classes.title}>
+          <div className={classes['collections']}>
+          <h2>Ваши коллекции</h2>
+            <div className={classes['collections-upper']}>
               <div className={classes['create-button']}>
-                <button onClick={handleExpand}>➕ Создать коллекцию</button>
+                <button 
+                  disabled={collectionsData.length >= maxCollections}
+                  title={(collectionsData.length >= maxCollections) ? (
+                    `Вы можете создать не более ${maxCollections} коллекций`
+                  ) : ('')}
+                  onClick={handleExpand}
+                >
+                  ➕ Создать коллекцию
+                </button>
                 {
                   isCreateExpanded ? (
                     <div className={classes['collection-create']}>
@@ -273,7 +356,7 @@ const User = () => {
                 }
               </div>
             </div>
-            <SavedCollections collections={collectionsData}/>
+            <SavedCollections collections={collectionsData} editCollectionsFn={setCollectionsData}/>
           </div>
           </>
         )}

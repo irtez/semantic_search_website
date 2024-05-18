@@ -1,11 +1,12 @@
 const Router = require('express')
 const router = new Router()
 const controller = require('../controllers/collectionController')
-const roleMiddleware = require('../middleware/roleMiddleware')
+const authMiddleware = require('../middleware/authMiddleware')
 
-router.post('', roleMiddleware(['USER', 'ADMIN']), controller.create)
-router.get('', roleMiddleware(['USER', 'ADMIN']), controller.getCollections)
+router.post('', authMiddleware, controller.create)
+router.get('', authMiddleware, controller.getCollections)
 // router.get('/getalladmin/:status', roleMiddleware(['ADMIN']), controller.getAllAdmin)
-router.patch('/:id', roleMiddleware(['USER', 'ADMIN']), controller.editCollection)
+router.patch('/:id', authMiddleware, controller.editCollection)
+router.delete('/:id', authMiddleware, controller.deleteCollection)
 
 module.exports = router
