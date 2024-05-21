@@ -42,7 +42,7 @@
     align-items: center;
 }
 
-.creation input,
+#doc_upload,
 .creation-submit-button {
     margin: 10px 0;
     padding: 10px;
@@ -51,12 +51,12 @@
     color: black;
 }
 
-.creation input {
+#doc_upload {
     width: 300px;
     background: white;
 }
 
-.creation label {
+.main-label {
     color: black;
     border: 1px solid black;
     border-radius: 3px;
@@ -107,20 +107,27 @@
     border-radius: 10px;
     padding: .5em;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: space-evenly;
     text-align: left;
-    height: fit-content;
+    height: 680px;
+    gap: 20px;
 }
 
 
 .chosen-file-info-block {
-    width: 80%;
+    width: 90%;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
+    height: fit-content;
+}
+
+.chosen-file-info-block input {
+    width: 300px;
+
 }
 
 /* .chosen-file-name {} */
@@ -153,7 +160,8 @@
     cursor: pointer;
 }
 
-.new-files-added {
+.new-files-added,
+.new-files-error {
     color: black;
     text-align: left;
     margin-top: 1em;

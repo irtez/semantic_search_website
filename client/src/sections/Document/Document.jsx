@@ -241,9 +241,13 @@ const Document = () => {
               <Viewer fileUrl={fileUrl} />
               </Worker>)
               :
-              (<p dangerouslySetInnerHTML={
+              (doc.text_markdown ? (
+                <div dangerouslySetInnerHTML={
                   { __html: doc.text_markdown}
-                }></p>)
+                }>
+                </div>
+              ) : (doc.text_plain)
+              )
           ) : (
             <p dangerouslySetInnerHTML={
               { __html: doc.text_markdown}

@@ -1,8 +1,11 @@
 const Document = require('../models/Document')
 const Collection = require('../models/Collection')
 const fs = require('fs').promises
-const pdf2html = require('pdf2html')
 const path = require('path')
+const pdf = require('pdf-parse')
+
+const semanticHost = process.env.semanticHost
+const semanticPort = process.env.semanticPort
 
 function sleep(milliseconds) {
     const date = Date.now();
@@ -12,76 +15,139 @@ function sleep(milliseconds) {
     } while (currentDate - date < milliseconds);
   }
 
-async function importPdfReader() {
-    const { PdfReader } = await import('pdfreader');
-    return new PdfReader();
-}
 
-async function getText(filename, reader) {
+async function getText(docPath) {
     let fileText = ''
-    if (filename.endsWith('.pdf')) {
-        await new Promise((resolve, reject) => {
-            reader.parseFileItems(filename, (err, item) => {
-            if (err) {
-                reject(err)
-            } else if (!item) {
-                resolve()
-            } else if (item.text) {
-                fileText += (item.text + '\n')
-            }
-            })
-        })
+    if (docPath.endsWith('.pdf')) {
+        let dataBuffer = await fs.readFile(docPath)
+        let data = await pdf(dataBuffer)
+        fileText = data.text
+        
     }
-    else if (filename.endsWith('.txt')) {
-        fileText = await fs.readFile(filename, 'utf8')
+    else if (docPath.endsWith('.txt')) {
+        fileText = await fs.readFile(docPath, 'utf-8')
     }
     if (!fileText.length) {
-        fileText = 'empty'
+        fileText = ''
     }
+    else {
+        fileText = fileText
+        .replace(/\xad[\n\r]/g, '')
+        .replace(/[\n\r]\xad/g, '')
+        .replace(/[\n\r]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    }
+    
+    
     return fileText
 }
 
+async function fetchSemantic(method, documents, path='document') {
+    const { default: fetch } = await import('node-fetch')
+    const url = new URL(`http://${semanticHost}:${semanticPort}/api/${path}`)
+    const response = await fetch(
+        url,
+        {
+            method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Array.from(documents))
+        }
+    )
+    return response
+}
 
 class fileController {
     async add(req, res) {
         try {
-            return res.status(501).json({message: "Not implemented yet"})
-            const comment = req.body.comment
-            const documents = Array.from(req.files)
-            const statuses = JSON.parse(req.body.statuses)
-            // добавить обработку исключений по типу существующей записи/не unique ключа
-            const reader = await importPdfReader()            
-
-            files.forEach(async (file, index) => {
-                try {
-                    const fileText = await getText(file.path, reader)
-                    const document = new Document(
-                        {
-                            name: file.filename.slice(0, -4),
-                            text: fileText,
-                            idPoint: index*2,
-                            status: statuses[index] || 'present',
-                            path: file.path
-                        }
-                    )
-                    await document.save()
-                    
-                } catch (e) {
-                    console.log(e)
-                    return res.status(400).json({message: "Ошибка записи в бд"})
+            const rawDocuments = Array.from(req.files)
+            if (!req.body.info) {
+                return res.status(400).json({message: "Нет информации о документах"})
+            }
+            const docInfo = JSON.parse(req.body.info)
+            if (rawDocuments.length !== docInfo.length) {
+                return res.status(400).json({
+                    message: "Количество информации о документах не совпадает с количеством документов",
+                    errorFiles: rawDocuments.map(doc => doc.filename)
+                })
+            }
+            const errorFiles = []
+            const updatedDocInfo = docInfo.map((info, index) => {
+                return {
+                    ...info,
+                    file: rawDocuments[index]
                 }
             })
+            const documents = updatedDocInfo.reduce((acc, doc) => {
+                if (!(doc.file.filename.endsWith('.pdf') || doc.file.filename.endsWith('.txt'))) {
+                    errorFiles.push(doc.file.filename)
+                }
+                else {
+                    acc.push(doc)
+                }
+                return acc
+            }, [])
             
-            // files.forEach((file) => {
-            //     console.log(file.name)
-            //     console.log(file.path)
-            // })
+            if (!documents.length) {
+                return res.status(400).json({message: "Список документов пуст.", errorFiles})
+            }    
+
+            const savedDocs = []
             
-            return res.status(200).json({message: "OK"})
+            for (const doc of documents) {
+                try {
+                    let docText;
+                    try {
+                        docText = await getText(doc.file.path);
+                    } catch (e) {
+                        console.log('Error getting text from file', doc.file.filename, ', error:', e);
+                        errorFiles.push(doc.file.filename);
+                        continue;
+                    }
+        
+                    const curDocInfo = {...doc};
+                    delete curDocInfo.file;
+                    const document = new Document({
+                        ...curDocInfo,
+                        filename: doc.file.filename,
+                        text_plain: docText
+                    });
+                    await document.save()
+                    savedDocs.push({
+                        id: document._id,
+                        title: document.title,
+                        gost_number: document.gost_number,
+                        filename: doc.file.filename
+                    })
+                } catch (e) {
+                    console.log('Error processing document', doc.file.filename, ', error:', e);
+                    errorFiles.push(doc.file.filename);
+                }
+            }
+
+            if (errorFiles.length === rawDocuments.length) {
+                return res.status(400).json({message: "Ни один из файлов не сохранен", errorFiles})
+            }
+            
+            const response = await fetchSemantic('POST', savedDocs)
+            const responseData = await response.json()
+            if (response.status === 200) {
+                return res.status(200).json({message: "OK", errorFiles, savedDocs})
+            }
+            else {
+                return res.status(400).json({
+                    message: "Ошибка добавления файлов в векторное хранилище", 
+                    responseData
+                })
+            }
+            
+            
 
         } catch (e) {
             console.log(e)
-            return res.status(400).json({message: "Ошибка при добавлении документа"})
+            return res.status(500).json({message: "Ошибка при добавлении документа"})
         }
     }
 
@@ -159,6 +225,23 @@ class fileController {
 
             sleep(500)
             return res.status(200).json(deleted)
+        } catch (e) {
+            console.log(e)
+            return res.status(400).json({message: 'Delete brand error'})
+        }
+    }
+
+    async test(req, res) {
+        try {
+            const documents = Array.from(req.files)
+            const textsPromises = documents.map(doc => getText(doc))
+            const texts = await Promise.all(textsPromises)
+
+            return res.status(200).json({texts})
+            
+            
+            
+            
         } catch (e) {
             console.log(e)
             return res.status(400).json({message: 'Delete brand error'})

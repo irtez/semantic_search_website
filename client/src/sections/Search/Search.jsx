@@ -149,6 +149,8 @@ const Search = () => {
   }
 
   const getQueryMatch = (text, query, windowSize, ellipsis) => {
+    if (!text)
+      return ''
     const index = text.toLowerCase().indexOf(query.toLowerCase())
     if (index === -1) {
       return text.slice(0, windowSize*2) + ellipsis
@@ -402,7 +404,7 @@ const Search = () => {
                     // ((oldSearchType === 'text') ? (document.numMatches ? (`Совпадений: ${document.numMatches}`) : (''))
                     // : 
                     // (`Совпадает на: ${document.similarity_score}%`))
-                    `Относительная релевантность: ${document.score}%`
+                    ((oldSearchType === 'text') ? ('') : (`Релевантность: ${document.score}%`))
                   }
                 >
                   {isChoosingDocs ? (
@@ -435,7 +437,7 @@ const Search = () => {
                   <p>{document.status}</p>
                 </div>
                 <div className={classes['search-result-doctext']}>
-                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(document.text_plain, oldQuery, 180, '...') }}/>
+                  <p dangerouslySetInnerHTML={{ __html: getQueryMatch(document.text_plain || '', oldQuery, 180, '...') }}/>
                 </div>
               </div>
               ))

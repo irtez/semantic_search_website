@@ -16,7 +16,7 @@ export const getCollections = async () => {
         return response.data
     } catch (e) {
         console.log(e.response.data.message)
-        alert(e.response.data.message)
+        //alert(e.response.data.message)
     }
 }
 

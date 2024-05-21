@@ -1,8 +1,9 @@
 import { Routes, Route } from 'react-router-dom'
-import Home from '../sections/Home/Home';
-import About from '../sections/About/About';
-import Cars from '../sections/Cars/Cars';
-import Service from '../sections/Service/Service';
+// import Home from '../sections/Home/Home';
+// import About from '../sections/About/About';
+// import Cars from '../sections/Cars/Cars';
+// import Service from '../sections/Service/Service';
+// import Car from '../sections/Car/Car';
 import Login from '../sections/Login';
 import Register from '../sections/Register';
 import NotFound from '../sections/404/NotFound';
@@ -13,17 +14,12 @@ import Document from '../sections/Document/Document'
 import { AppContext } from './AppContext.js'
 import { useContext } from 'react'
 import { observer } from 'mobx-react-lite';
-import Car from '../sections/Car/Car';
+
 
 const publicRoutes = [
     {path: '/', Component: Search},
     {path: '/login', Component: Login},
     {path: '/register', Component: Register},
-    {path: '/cars', Component: Cars},
-    {path: '/service', Component: Service},
-    {path: '/home', Component: Home},
-    {path: '/about', Component: About},
-    {path: '/cars/:id', Component: Car},
     {path: '/docs/:id', Component: Document}
 ]
 

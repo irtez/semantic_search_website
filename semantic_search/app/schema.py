@@ -31,3 +31,8 @@ class ErrorResponse(BaseModel):
     error: bool = Field(..., example=True, title='Whether there is error')
     message: str = Field(..., example='', title='Error message')
     traceback: str = Field(None, example='', title='Detailed traceback of the error')
+
+class Document(BaseModel):
+    id: str = Field(..., example='663fa9788275d659b2aa3caf', title='Document id from MongoDB')
+    gost_number: str = Field(..., example='ГОСТ 20809-75', title='Document (GOST) number')
+    title: str = Field(..., example='Патроны охотничьи 9х53. Типы и основные размеры', title='Document title')

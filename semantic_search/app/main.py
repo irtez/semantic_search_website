@@ -1,14 +1,16 @@
 import os
 import sys
-from typing import Annotated
+from typing import Annotated, List
 import logging
 import onnxruntime as ort
 from transformers import AutoTokenizer
 from qdrant_client import AsyncQdrantClient
+from qdrant_client.http import models
 import json
+import torch
 
 import uvicorn
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 from fastapi.logger import logger
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +19,7 @@ import gc
 
 from config import CONFIG
 from exception_handler import validation_exception_handler, python_exception_handler
-from schema import *
+from schema import ErrorResponse, Document
 import utils
 
 # Initialize API Server
@@ -47,6 +49,12 @@ tokenizer = AutoTokenizer.from_pretrained(semantic_search_tokenizer_path)
 
 qdrant = AsyncQdrantClient(host=CONFIG['qdrant_host'], port=CONFIG['qdrant_port'])
 
+def get_embeddings(texts: str) -> torch.Tensor:
+    ort_inputs = utils.ort_tokenize(texts, tokenizer)
+    ort_outs = session.run(None, ort_inputs)
+    embeddings = utils.average_pool(ort_outs, ort_inputs, normalize=True)
+    return embeddings
+
 @app.get(
         '/api/search/titles',
         response_description="Sorted documents IDx with scores.",
@@ -58,16 +66,14 @@ qdrant = AsyncQdrantClient(host=CONFIG['qdrant_host'], port=CONFIG['qdrant_port'
 async def search_documents(
     query: Annotated[str, Query(description='Search query.')],
     score_threshold: Annotated[float, Query(ge=0.1, le=0.9, description="Similiarity score threshold.")] = 0.8,
-    document_limit: Annotated[int, Query(ge=5, le=2000, description="Maximum number of documents returned.")] = 1000,
+    document_limit: Annotated[int, Query(ge=5, le=2000, description="Maximum number of documents returned.")] = 1000
 ):
     """
     Perform document semantic search
     """
-    logger.info(f'API predict called with query: {query}')
+    logger.info(f'Serach API predict called with query: {query}')
 
-    ort_inputs = utils.ort_tokenize(f"query: {query}", tokenizer)
-    ort_outs = session.run(None, ort_inputs)
-    embedding = utils.average_pool(ort_outs, ort_inputs, normalize=True)
+    embedding = get_embeddings([query]).squeeze(0)
     # async
     points = await qdrant.search(
         collection_name=CONFIG['titles_collection_name'],
@@ -75,17 +81,99 @@ async def search_documents(
         score_threshold=score_threshold,
         limit=document_limit
     )
+    scores = [point.score for point in points]
+    scores = utils.scale_scores(scores)
     documents = [
         {
-            "document_id": point.payload['document_id'],
-            "similarity_score": point.score
+            "document_id": str(point.id).replace('0'*8, '').replace('-', ''),
+            "similarity_score": score 
         }
-        for point in points
+        for point, score in zip(points, scores)
     ]
+    
 
     gc.collect()
     return documents
 
+@app.post(
+        '/api/document',
+        response_description="Status of added documents.",
+        responses={
+            422: {"model": ErrorResponse},
+            500: {"model": ErrorResponse}
+        }
+)
+async def add_documents(
+    documents: List[Document] = Body(..., description='Documents.')
+):
+    logger.info(f'Document add API predict called with {len(documents)} documents.')
+
+    doc_embeddings = get_embeddings([doc.title for doc in documents])
+
+    qdrant.upload_collection(
+        collection_name=CONFIG['titles_collection_name'],
+        vectors=doc_embeddings,
+        ids=utils.get_ids(documents),
+        payload=[
+            {
+                'gost_number': doc.gost_number,
+                'title': doc.title
+            }
+            for doc in documents
+        ],
+        parallel=CONFIG['qdrant_n_parallel'],
+        max_retries=3
+    )
+
+    return {'message': 'OK'}
+
+@app.delete(
+        '/api/document',
+        response_description="Status of deleted documents.",
+        responses={
+            422: {"model": ErrorResponse},
+            500: {"model": ErrorResponse}
+        }
+)
+async def delete_documents(
+    documents: List[Document] = Body(..., description='Documents.')
+):
+    await qdrant.delete(
+        collection_name=CONFIG['titles_collection_name'],
+        points_selector=models.PointIdsList(
+            points=utils.get_ids(documents),
+        )
+    )
+    return {'message': 'OK'}
+
+@app.patch(
+        '/api/document',
+        response_description="Status of edited documents.",
+        responses={
+            422: {"model": ErrorResponse},
+            500: {"model": ErrorResponse}
+        }
+)
+async def edit_documents(
+   documents: List[Document] = Body(..., description='Documents.')
+):
+    doc_embeddings = get_embeddings([doc.title for doc in documents])
+    qdrant.upload_collection(
+        collection_name=CONFIG['titles_collection_name'],
+        ids=utils.get_ids(documents),
+        payload=[
+            {
+                'gost_number': doc.gost_number,
+                'title': doc.title
+            }
+            for doc in documents
+        ],
+        vectors=doc_embeddings,
+        parallel=CONFIG['qdrant_n_parallel'],
+        max_retries=3
+    )
+    return {'message': 'OK'}
+    
 
 @app.get('/about')
 def show_about():

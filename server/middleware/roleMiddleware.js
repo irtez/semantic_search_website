@@ -7,11 +7,26 @@ module.exports = function (roles) {
             next()
         }
         try {
+            if (!req.headers.authorization) {
+                return res.status(403).json({message: "Пользователь не авторизован"})
+            }
             const token = req.headers.authorization.split(' ')[1]
             if (!token) {
                 return res.status(403).json({message: "Пользователь не авторизован"})
             }
-            const {roles: userRoles} = jwt.verify(token, process.env.secret)
+            let userRoles
+            try {
+                const { roles } = jwt.verify(token, process.env.secret)
+                userRoles = roles
+            }
+            catch (e) {
+                if (e.name === 'TokenExpiredError') {
+                    return res.status(400).json({message: "Ваш токен истек. Авторизуйтесь заново."})
+                } else {
+                    throw e
+                }
+            }   
+                
             let hasRole = false
             userRoles.forEach(role => {
                 if (roles.includes(role)) {

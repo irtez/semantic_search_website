@@ -7,11 +7,10 @@ const storage = require('./storage')
 const upload = multer({ storage: storage })
 
 router.post('', [upload.array("files"), roleMiddleware(['ADMIN'])], controller.add)
-//router.post('/create', [upload.single("image"), roleMiddleware(['ADMIN'])], controller.create)
 router.get('/:id', controller.getOne)
 router.get('/download/:id', controller.downloadOne)
 router.delete('/:id', roleMiddleware(['ADMIN']), controller.delete)
-// router.patch('/:id', [upload.single("image"), roleMiddleware(['ADMIN'])], controller.update)
 router.patch('/:id', roleMiddleware(['ADMIN']), controller.update)
+router.post('/test', [upload.array("files"), roleMiddleware(['ADMIN'])], controller.test)
 
 module.exports = router

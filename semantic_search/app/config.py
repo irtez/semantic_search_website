@@ -2,9 +2,10 @@ import os
 
 # Config that serves all environment
 GLOBAL_CONFIG = {
-    "titles_collection_name": "gosts_titles",
+    "titles_collection_name": "gosts_titles2",
     "qdrant_host": "localhost",
     "qdrant_port": 6333,
+    "qdrant_n_parallel": 1,
     "models_folder": "../models",
     "semantic_search_model": "multilingual-e5-large",
     "tokenizer_folder": "tokenizer",
