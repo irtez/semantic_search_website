@@ -23,6 +23,7 @@ function escapeRegex(str) {
   return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
+
 const Search = () => {
   const [searchType, setSearchType] = useState('text')
   const [searchQuery, setSearchQuery] = useState('')
@@ -90,20 +91,26 @@ const Search = () => {
 
   const handleCollectionSave = async (e) => {
     setIsUpdatePending(true)
-    const response = await editCollection({
-      collectionId: chosenCollection._id,
-      add: docsToSave
-    })
-    if (response.status === 200) {
-      setIsCollectionUpdated(true)
-      setDocsToSave([])
-      setIsChoosingCollection(false)
-      setIsChoosingDocs(false)
-      const updatedCollections = userCollections.map(collection =>
-        collection._id === chosenCollection._id ? response.data.collection : collection
-      )
-      setUserCollections(updatedCollections)
+    try {
+      const response = await editCollection({
+        collectionId: chosenCollection._id,
+        add: docsToSave
+      })
+      if (response.status === 200) {
+        setIsCollectionUpdated(true)
+        setDocsToSave([])
+        setIsChoosingCollection(false)
+        setIsChoosingDocs(false)
+        const updatedCollections = userCollections.map(collection =>
+          collection._id === chosenCollection._id ? response.data.collection : collection
+        )
+        setUserCollections(updatedCollections)
+      }
     }
+    catch (e) {
+      console.log(e)
+    }
+    
     setIsUpdatePending(false)
   }
 
@@ -128,7 +135,11 @@ const Search = () => {
   const getTitleMatch = (text, query, maxTitleLength, ellipsis) => {
     const index = text.toLowerCase().indexOf(query.toLowerCase())
     if (index === -1) {
-      return text.slice(0, maxTitleLength) + ellipsis
+      if (text.length > maxTitleLength) {
+        return text.slice(0, maxTitleLength) + ellipsis
+      }
+      return text.slice(0, maxTitleLength)
+      
     }
     query = escapeRegex(query)
     const queryLength = query.length
@@ -142,8 +153,8 @@ const Search = () => {
       now = index + queryLength
     })
     newText += viewedText.slice(indexes[indexes.length - 1] + queryLength, viewedText.length)
-    if (maxTitleLength > text.length) {
-      newText += '...'
+    if (maxTitleLength < text.length) {
+      newText += ellipsis
     }
     return newText
   }
@@ -180,7 +191,7 @@ const Search = () => {
     })
     newText += viewedText.slice(indexes[indexes.length - 1] + queryLength, viewedText.length)
     if (end < text.length) {
-      newText += '...'
+      newText += ellipsis
     }
     return newText
   }

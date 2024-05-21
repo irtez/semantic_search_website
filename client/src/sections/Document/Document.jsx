@@ -81,12 +81,19 @@ const Document = () => {
 
     const handleSave = async (e) => {
       setIsUpdatePending(true)
-      const response = await editDocument(id, editedDoc)
-      if (response.status === 200) {
-        setDoc(response.data.document)
-        setIsEditing(false)
-        setEditedDoc(null)
+      
+      try {
+        const response = await editDocument(id, editedDoc)
+        if (response.status === 200) {
+          setDoc(response.data.document)
+          setIsEditing(false)
+          setEditedDoc(null)
+        }
       }
+      catch (e) {
+        console.log(e)
+      }
+      
       setIsUpdatePending(false)
     }
 
@@ -122,7 +129,7 @@ const Document = () => {
             isEditing ? (
               <input 
                 type='text' 
-                value={editedDoc.gost_number + '. ' + (editedDoc.title || doc.title)} 
+                value={doc.gost_number + '. ' + (getDisplayValue('title'))} 
                 onChange={(e) => setNewDocInfo({title: e.target.value})}
               ></input>
             ) : (doc.gost_number + '. ' + doc.title)

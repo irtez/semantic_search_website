@@ -59,7 +59,7 @@ async function fetchSemantic(method, documents, path='document') {
     return response
 }
 
-class fileController {
+class documentController {
     async add(req, res) {
         try {
             const rawDocuments = Array.from(req.files)
@@ -159,16 +159,6 @@ class fileController {
             if (!doc) {
                 return res.status(500).json({message: 'Запрашиваемый файл не найден'})
             }
-            // doc = doc.toObject()
-            // let docMarkup = ''
-            // if (doc.path.endsWith('.pdf')) {
-            //     const pages = await pdf2html.pages(doc.path)
-            //     pages.forEach((page) => { docMarkup += page })
-            // }
-            // else if (doc.path.endsWith('.txt')) {
-            //     docMarkup = doc.text
-            // }
-            // doc.markup = docMarkup
             return res.status(200).json(doc)
         } catch (e) {
             console.log(e)
@@ -201,11 +191,28 @@ class fileController {
             const docId = req.params.id
             const newData = req.body
             const document = await Document.findById(docId)
+            
             if (!document) {
                 return res.status(404).json({message: "Документ не найден"})
             }
             Object.assign(document, newData)
-            await document.save()
+            
+            if (newData.title) {
+                const documents = [
+                    {
+                        id: document._id,
+                        title: document.title,
+                        gost_number: document.gost_number
+                    }
+                ]
+                const response = await fetchSemantic('PATCH', documents)
+                if (!response.ok) {
+                    const responseData = await response.json()
+                    console.log(responseData)
+                    return res.status(400).json({message: "Ошибка при обновлении в семантическом модуле", responseData})
+                }
+                await document.save()
+            }
             sleep(500)
             return res.status(200).json({document})
 
@@ -219,11 +226,22 @@ class fileController {
         try {
             const docId = req.params.id
             const deleted = await Document.findByIdAndDelete(docId)
+            const documents = [
+                {
+                    id: deleted._id,
+                    title: deleted.title,
+                    gost_number: deleted.gost_number
+                }
+            ]
+            const response = await fetchSemantic('DELETE', documents)
+            if (!response.ok) {
+                const responseData = await response.json()
+                console.log(responseData)
+                return res.status(400).json({message: "Ошибка при удалении в семантическом модуле", responseData})
+            }
             const filter = { documents: docId }
             const update = { $pull: { documents: docId } }
             const result = await Collection.updateMany(filter, update)
-
-            sleep(500)
             return res.status(200).json(deleted)
         } catch (e) {
             console.log(e)
@@ -231,32 +249,6 @@ class fileController {
         }
     }
 
-    async test(req, res) {
-        try {
-            const documents = Array.from(req.files)
-            const textsPromises = documents.map(doc => getText(doc))
-            const texts = await Promise.all(textsPromises)
-
-            return res.status(200).json({texts})
-            
-            
-            
-            
-        } catch (e) {
-            console.log(e)
-            return res.status(400).json({message: 'Delete brand error'})
-        }
-    }
-
-    // async getAll(req, res) {
-    //     try {
-    //         const brands = await Brand.find()
-    //         return res.status(200).json(brands)
-    //     } catch (e) {
-    //         console.log(e)
-    //         return res.status(400).json({message: 'Get brands error'})
-    //     }
-    // }
 }
 
-module.exports = new fileController()
+module.exports = new documentController()

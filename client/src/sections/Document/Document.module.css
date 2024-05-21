@@ -64,6 +64,7 @@
     align-self: center;
     position: absolute;
     margin-right: 100px;
+    z-index: 2;
 }
 .edit-button {
     background-color: rgb(2, 166, 2);
@@ -97,6 +98,7 @@
     border-radius: 5px;
     font-size: 14px;
     transition: .3s;
+    z-index: 3;
 }
 .delete-confirm-button:hover{
     cursor: pointer;
