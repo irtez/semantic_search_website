@@ -207,7 +207,7 @@ class searchController {
             if (!response.ok) {
                 const responseData = await response.json()
                 console.log(responseData)
-                return res.status(400).json({message: "Ошибка при удалении в семантическом модуле", responseData})
+                return res.status(400).json({message: "Ошибка при получении похожих документов", responseData})
             }
             const documents = await response.json()
             const textDocumentIds = documents.text.map(doc => doc.document_id)
@@ -230,7 +230,7 @@ class searchController {
             return res.status(200).json(documents)
         } catch (e) {
             console.log(e)
-            return res.status(400).json({message: 'Delete brand error'})
+            return res.status(400).json({message: 'Ошибка получения похожих документов'})
         }
     }
 

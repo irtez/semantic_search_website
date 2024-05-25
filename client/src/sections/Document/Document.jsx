@@ -15,8 +15,14 @@ import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import { getCollections, editCollection } from '../../http/collectionAPI'
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import Alert from '@mui/material/Alert';
 
-
+const maxDocuments = 30
 
 const Document = () => {
     const { id } = useParams()
@@ -30,6 +36,12 @@ const Document = () => {
     const [isUpdatePending, setIsUpdatePending] = useState(false)
     const [similarDocs, setSimilarDocs] = useState(null)
     const [simType, setSimType] = useState('title')
+    const [userCollections, setUserCollections] = useState(null)
+    const [isSaving, setIsSaving] = useState(false)
+    const [chosenCollection, setChosenCollection] = useState(null)
+    const [isInCollectionAlert, setIsInCollectionAlert] = useState(false)
+    const [isAddingInCollection, setIsAddingInCollection] = useState(false)
+    const [isDocAdded, setIsDocAdded] = useState(false)
 
     useEffect(() => {
         getOne(id)
@@ -74,8 +86,32 @@ const Document = () => {
           })
       }, [id])
 
+      useEffect(() => {
+        getCollections()
+          .then(responseData => {
+            if (!responseData) {
+              setUserCollections([])
+            }
+            else {
+              const collections = responseData.collections.map(({ _id, name, documents }) => ({
+                _id,
+                name,
+                documents: Object.values(documents).map(({ id }) => id), // Извлекаем ключи объекта documents как массив
+              }))
+              console.log(collections)
+              setUserCollections(collections)
+              if (collections) {
+                setChosenCollection(collections[0])
+              }
+            }
+          })
+          .catch(error => {
+            console.log('Error fetching data:', error)
+          })
+      }, [])
+
     
-    if (!(doc && fileUrl)) {
+    if (!(doc && fileUrl && userCollections)) {
         return <Loading/>
     }
     
@@ -110,7 +146,6 @@ const Document = () => {
 
     const handleSave = async (e) => {
       setIsUpdatePending(true)
-      
       try {
         const response = await editDocument(id, editedDoc)
         if (response.status === 200) {
@@ -122,21 +157,90 @@ const Document = () => {
       catch (e) {
         console.log(e)
       }
-      
       setIsUpdatePending(false)
     }
 
     const handleDeletion = async (e) => {
       setIsUpdatePending(true)
-      const response = await deleteDocument(id)
-      if (response.status === 200) {
-        setIsUpdatePending(false)
-        navigate('/', { replace: true })
+      try {
+        const response = await deleteDocument(id)
+        if (response.status === 200) {
+          setIsUpdatePending(false)
+          navigate('/', { replace: true })
+        }
       }
+      catch (e) {
+        console.log(e)
+      }
+      setIsUpdatePending(false)
     }
+
+    const handleCollectionUpdate = async (e) => {
+      const documentIds = chosenCollection.documents
+      if (documentIds.includes(id)) {
+        setIsInCollectionAlert(true)
+        return
+      }
+      setIsAddingInCollection(true)
+      try {
+        const response = await editCollection({
+          collectionId: chosenCollection._id,
+          add: [id]
+        })
+        if (response.status === 200) {
+          console.log(response.data.collection)
+          const updatedCollections = userCollections.map(collection =>
+            collection._id === chosenCollection._id ? response.data.collection : collection
+          )
+          setChosenCollection(updatedCollections[0])
+          
+          setUserCollections(updatedCollections)
+        }
+      }
+      catch (e) {
+        console.log(e)
+      }
+      setIsSaving(false)
+      setIsAddingInCollection(false)
+      setIsDocAdded(true)
+  }
 
   return (
     <section id={classes.doc}>
+      <div style={{position: 'absolute', height: '100%', width: '30%'}}>
+      {
+          isInCollectionAlert ? (
+            <Alert 
+              severity="error" 
+              onClose={() => {setIsInCollectionAlert(false)}}
+              sx={{
+                position: 'sticky',
+                zIndex: 3,
+                top: 60,
+                border: '1px solid red'
+              }}
+            >
+              Этот документ уже находится в выбранной коллекции.
+            </Alert>
+          ) : ('')
+        }
+        {
+          isDocAdded ? (
+            <Alert 
+              severity="success" 
+              onClose={() => {setIsDocAdded(false)}}
+              sx={{
+                position: 'sticky',
+                zIndex: 3,
+                top: 60,
+                border: '1px solid green'
+              }}
+            >
+              Документ добавлен в коллекцию.
+            </Alert>
+          ) : ('')
+        }
+      </div>
       <div className={classes['similar-docs']}>
         <Accordion style={{
           borderRadius: "10px", 
@@ -179,10 +283,10 @@ const Document = () => {
                     <ul>
                     {similarDocs[simType].map(doc => {
                       return <li 
-                          dataAttr={'Близость: ' + Math.round(doc.similarity_score * 10000)/100 + '%'} 
+                          dataattr={'Близость: ' + Math.round(doc.similarity_score * 10000)/100 + '%'} 
                           style={{paddingBottom: "30px", lineHeight: "1.2", textAlign: "justify"}}
                         >
-                          <Link to={`/docs/${doc._id}`} style={{color: "black"}}>
+                          <Link to={`/docs/${doc._id}`} style={{color: "black"}} onClick={() => {window.scrollTo({top: 0})}}>
                             {doc.gost_number}. {doc.title} <span style={{fontStyle: "italic"}}>({doc.status})</span>
                           </Link>
                         </li>
@@ -221,7 +325,58 @@ const Document = () => {
               <p onClick={handleEdit} className={'fa fa-edit ' + classes['edit-button']}></p>
             </div>
           ) : ('')}
-          <p><b>Наименование: </b> 
+          <div className={classes['doc-collection-save']}>
+            <button 
+              className={classes['is-save-button']}
+              onClick={() => setIsSaving(!isSaving)}
+              disabled={(!userCollections.length) || (!user.isAuth)}
+              title={
+                user.isAuth ? (
+                  userCollections.length ? ('') : ('У вас пока нет созданных коллекций')
+                ) : ('Авторизуйтесь')
+              }
+            >
+              <span className={'fa fa-plus'} /> Добавить в коллекцию
+            </button>
+            {isSaving ? (
+              <div className={classes['choosing-collection']}>
+                {
+                  !isAddingInCollection ? (
+                    <>
+                    <FormControl variant="standard" sx={{ width: 120 }}>
+                      <InputLabel>Название коллекции</InputLabel>
+                      <Select
+                        value={chosenCollection ? (chosenCollection._id) : (userCollections[0]._id)}
+                        onChange={(e) => {
+                          setChosenCollection(
+                            userCollections.filter(col => col._id === e.target.value)[0]
+                          )
+                          }}
+                        label="Название"
+                      >
+                        {userCollections.map(collection => {
+                          return <MenuItem value={collection._id}>
+                            {collection.name} ({collection.documents ? (collection.documents.length) : (0)}/{maxDocuments})
+                          </MenuItem>
+                        })}
+                      </Select>
+                    </FormControl>
+                    <button 
+                      onClick={handleCollectionUpdate}
+                      disabled={
+                        (chosenCollection.documents.length >= 30)
+                      }
+                      title={(chosenCollection.documents.length >= 30) ? ('Выбранная коллекция переполнена') : ('')}
+                    >
+                      Добавить
+                    </button>
+                    </>
+                  ) : (<Loading height='100px' spinnerSize='50px'/>)
+                }
+              </div>
+            ) : ('')}
+          </div>
+          <p style={{marginTop: '10px', width: isSaving ? ('85%') : ('100%')}}><b>Наименование: </b> 
           {
             isEditing ? (
               <input 
@@ -276,7 +431,7 @@ const Document = () => {
             ) : (doc.replaced_by || '-')
           }
           </p>
-          <p><b>Основной раздел ОКС: </b> 
+          <p style={{width: "85%"}}><b>Основной раздел ОКС: </b> 
           {
             isEditing ? (
               <input 

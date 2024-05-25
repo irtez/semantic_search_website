@@ -50,7 +50,7 @@
 
 .edit-button-holder{
     position: absolute;
-    width: 64%;
+    width: 63.5vw;
     height: 20px;
     display: flex;
     align-items: center;
@@ -109,7 +109,7 @@
 
 .save-button-holder {
     position: absolute;
-    width: 63.5%;
+    width: 63.5vw;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -139,10 +139,11 @@
 
 .similar-docs {
     position: absolute;
-    width: 24%;
+    width: 24vw;
     height: fit-content;
-    right: 1%;
-    top: 28%;
+    /* left: 75%; */
+    left: 74vw;
+    top: 30%;
 }
 .loading-holder {
     width: 100%;
@@ -157,4 +158,53 @@
     content: attr(dataattr);
     position: absolute;
     margin-top: -16px;
+}
+
+.is-save-button {
+    padding: 5px;
+    background-color: rgb(166, 166, 113);
+    border-radius: 5px;
+    width: 200px;
+    text-align: center;
+    transition: .3s;
+    color: black;
+    border: 1px solid black;
+}
+
+.is-save-button:hover {
+    cursor: pointer;
+    transition: .3s;
+    background-color: rgb(138, 138, 97);
+}
+.is-save-button:hover:disabled {
+    cursor: not-allowed;
+    transition: .3s;
+    background-color: rgb(189, 189, 162);
+}
+
+.choosing-collection {
+    background-color: ivory;
+    border: 1px solid black;
+    width: 240px;
+    height: 150px;
+    z-index: 1;
+    border-radius: 11px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+    color: black;
+    margin-top: 0;
+}
+.choosing-collection button {
+    border-radius: 5px;
+    border: 1px solid black;
+    padding: .15em;
+}
+.choosing-collection button:hover {
+    cursor: pointer;
+}
+.choosing-collection button:disabled:hover {
+    cursor: not-allowed;
 }

@@ -33,11 +33,16 @@ const SavedCollections = (props) => {
   
   const handleDeleteCollection = async (e) => {
     setIsDeletionPending(true)
-    const response = await deleteCollection(collectionToDelete)
-    if (response.status === 200) {
-      const updatedCollections = userCollections.filter(col => col._id !== collectionToDelete)
-      setCollections([...updatedCollections])
-      setCollectionToDelete(null)
+    try {
+      const response = await deleteCollection(collectionToDelete)
+      if (response.status === 200) {
+        const updatedCollections = userCollections.filter(col => col._id !== collectionToDelete)
+        setCollections([...updatedCollections])
+        setCollectionToDelete(null)
+      }
+    }
+    catch (e) {
+      console.log(e)
     }
     setIsDeletionPending(false)
   }
@@ -65,20 +70,25 @@ const SavedCollections = (props) => {
 
   const deleteDocs = async (colId) => {
     setIsDeletionPending(true)
-    const response = await editCollection({
-      collectionId: colId,
-      delete: docsToDelete
-    })
-    if (response.status === 200) {
-      setIsDeletingDocs(false)
-      setDocsToDelete([])
-      
-      const curCollection = userCollections.filter(col => col._id === colId)[0]
-      const updatedDocs = curCollection.documents.filter(doc => !docsToDelete.includes(doc.id))
-      const updatedCollections = userCollections.map(collection =>
-        collection._id === colId ? { ...collection, documents: updatedDocs } : collection
-      )
-      setCollections(updatedCollections)
+    try {
+      const response = await editCollection({
+        collectionId: colId,
+        delete: docsToDelete
+      })
+      if (response.status === 200) {
+        setIsDeletingDocs(false)
+        setDocsToDelete([])
+        
+        const curCollection = userCollections.filter(col => col._id === colId)[0]
+        const updatedDocs = curCollection.documents.filter(doc => !docsToDelete.includes(doc.id))
+        const updatedCollections = userCollections.map(collection =>
+          collection._id === colId ? { ...collection, documents: updatedDocs } : collection
+        )
+        setCollections(updatedCollections)
+      }
+    }
+    catch (e) {
+      console.log(e)
     }
     setIsDeletionPending(false)
   }
@@ -170,7 +180,7 @@ const SavedCollections = (props) => {
             </div>
           )
         })
-      ) : (<p>У вас пока нет созданных коллекций.</p>)}
+      ) : (<p style={{width: "100%", textAlign: "center"}}>У вас пока нет созданных коллекций.</p>)}
     </div>
   )
 }

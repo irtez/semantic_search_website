@@ -4,6 +4,7 @@ import './Admin.css'
 import { addDocuments } from '../../http/documentAPI'
 import Loading from '../Loading';
 import TextField from '@mui/material/TextField';
+import Alert from '@mui/material/Alert';
 
 
 const Admin = () => {
@@ -15,12 +16,17 @@ const Admin = () => {
     const [invalidFmtWarning, setInvalidFmtWarning] = useState(false)
     const [drop, setDrop] = useState(false)
     const [docsInfo, setDocsInfo] = useState([])
+    const [tooHeavyDocsWarning, setTooHeavyDocsWarning] = useState(false)
 
     const handleDocsSubmit = async (e) => {
+        e.preventDefault()
         setIsLoading(true)
+        window.scrollTo({top: 0})
+        const totalSize = chosenFiles.reduce((sum, file) => sum + file.size, 0)
+        if ((totalSize / (1024**2)) >= 5) {
+            setTooHeavyDocsWarning(getPrettifiedSize(totalSize))
+        }
         try {
-            
-            e.preventDefault()
             const formData = new FormData()
             chosenFiles.forEach((file) => {
                 formData.append('files', file)
@@ -28,7 +34,6 @@ const Admin = () => {
             formData.append('info', JSON.stringify(docsInfo))
 
             const response = await addDocuments(formData)
-            // console.log(response)
             if (response.status === 200) {
                 setFiles([])
                 setDocsInfo([])
@@ -46,6 +51,7 @@ const Admin = () => {
         } catch (error) {
             console.error("Error processing files:", error)
         }
+        setTooHeavyDocsWarning(false)
         setIsLoading(false)
     }
 
@@ -86,21 +92,26 @@ const Admin = () => {
     };
 
     const addFiles = (files) => {
-        setIsLoading(true)
         if (!files.length) {
             return
         }
-        const newFiles = Array.from(files).filter((file) => checkFile(file))
-        if (newFiles.length !== files.length) {
-            setInvalidFmtWarning(true)
+        setIsLoading(true)
+        try {
+            const newFiles = Array.from(files).filter((file) => checkFile(file))
+            if (newFiles.length !== files.length) {
+                setInvalidFmtWarning(true)
+            }
+            else {
+                setInvalidFmtWarning(false)
+            }
+            setFiles(chosenFiles.concat(newFiles))
+            setUploadedFiles([])
+            setErrorFiles([])
+            setDocsInfo([...docsInfo, ...Array(newFiles.length).fill({})])
         }
-        else {
-            setInvalidFmtWarning(false)
+        catch (e) {
+            console.log(e)
         }
-        setFiles(chosenFiles.concat(newFiles))
-        setUploadedFiles([])
-        setErrorFiles([])
-        setDocsInfo([...docsInfo, ...Array(newFiles.length).fill({})])
         setIsLoading(false)
     }   
 
@@ -134,9 +145,28 @@ const Admin = () => {
 
   return (
     <section id={classes.admin}>
+        <div style={{position: 'absolute', height: '20%', width: '50%', textAlign: "center"}}>
+            {
+                tooHeavyDocsWarning ? (
+                    <Alert 
+                    severity="warning" 
+                    onClose={() => {setTooHeavyDocsWarning(false)}}
+                    sx={{
+                        position: 'sticky',
+                        zIndex: 3,
+                        top: 30,
+                        border: '1px solid orange',
+                        marginTop: "-9.2%"
+                    }}
+                    >
+                    Документы весят {tooHeavyDocsWarning}, процесс добавления может занять несколько минут.
+                    </Alert>
+                ) : ('')
+            }
+        </div>
         <div className={classes.creation}>
             {
-                isLoading ? (<Loading height='600px' spinnerSize='120px'/>) : (
+                isLoading ? (<Loading height='500px' spinnerSize='120px'/>) : (
                 <>
                     <p className={classes['creation-title']}>Добавление файлов</p>
                     <p className={classes['creation-info-text']}>Выберите файлы, которые хотите добавить. Названия файлов будут сохранены в качестве имён документов.</p>

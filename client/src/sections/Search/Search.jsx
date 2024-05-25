@@ -211,22 +211,27 @@ const Search = () => {
     setFoundDocuments([])
     setCurPage(1)
     setNotFound(false)
-    const response = await searchDocs(searchQuery, searchType)
-    if (response.status === 200) {
-      const documents = response.data.documents
+    try {
+      const response = await searchDocs(searchQuery, searchType)
+      if (response.status === 200) {
+        const documents = response.data.documents
 
-      setOldQuery(searchQuery)
-      if (!documents.length) {
-        setNotFound(true)
-        setFoundDocuments([])
+        setOldQuery(searchQuery)
+        if (!documents.length) {
+          setNotFound(true)
+          setFoundDocuments([])
+        }
+        else {
+          setFoundDocuments(documents)
+        }
+        
+        setOldSearchType(searchType)
+        const elapsedTime = Math.round((performance.now() / 1000 - startTime) * 100) / 100
+        setSearchTime(elapsedTime)
       }
-      else {
-        setFoundDocuments(documents)
-      }
-      
-      setOldSearchType(searchType)
-      const elapsedTime = Math.round((performance.now() / 1000 - startTime) * 100) / 100
-      setSearchTime(elapsedTime)
+    }
+    catch (e) {
+      console.log(e)
     }
     setLoading(false)
   }
@@ -327,7 +332,7 @@ const Search = () => {
                   Search('')
                 }
               }}
-              dataAttr={
+              dataattr={
                 (searchTime ? (`Время поиска: ${searchTime} сек.`) 
                 : 
                 (''))
@@ -343,7 +348,7 @@ const Search = () => {
               onClick={handleChoosingCollection}
               disabled={!user.isAuth}
               title={!user.isAuth ? "Сохранение доступно только авторизованным пользователям" : ''}
-              dataAttr={
+              dataattr={
                 isChoosingCollection ? (
                   'Выберите название коллекции'
                 ) : (
@@ -411,7 +416,7 @@ const Search = () => {
               <div className={classes['search-result']}>
                 <div 
                   className={classes['search-result-number']} 
-                  dataAttr={
+                  dataattr={
                     // ((oldSearchType === 'text') ? (document.numMatches ? (`Совпадений: ${document.numMatches}`) : (''))
                     // : 
                     // (`Совпадает на: ${document.similarity_score}%`))
