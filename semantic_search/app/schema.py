@@ -1,27 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict
-from fastapi import UploadFile
-from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
-
-
-# class InferenceInput(BaseModel):
-#     """
-#     Input values for model inference
-#     """
-#     # model_config = ConfigDict(arbitrary_types_allowed=True)
-#     alpha: float = Field(..., ge=0.0, le=1.0, title='The weight that \
-#                              controls the degree of stylization. Should be 0<=alpha<=1.')
-
-    
-
-
-
-# class InferenceResponse(BaseModel):
-#     """
-#     Output response for model inference
-#     """
-#     error: bool = Field(..., example=False, title='Whether there is error')
-#     result: FileResponse = Field(..., title='Resulting image with content from original image \
-#                                 and style from style image.', )
+from pydantic import BaseModel, Field
+from typing import Optional, List
 
 
 class ErrorResponse(BaseModel):
@@ -30,9 +8,21 @@ class ErrorResponse(BaseModel):
     """
     error: bool = Field(..., example=True, title='Whether there is error')
     message: str = Field(..., example='', title='Error message')
-    traceback: str = Field(None, example='', title='Detailed traceback of the error')
+    traceback: Optional[str] = Field(None, example='', title='Detailed traceback of the error')
+
+class SuccessResponse(BaseModel):
+    message: str = Field(..., example='OK')
+
+class FoundDocument(BaseModel):
+    document_id: str = Field(..., example='663fa9788275d659b2aa3caf', title='Document id from MongoDB')
+    similarity_score: float = Field(..., example=0.76545345, title='Document similarity score')
+
+class SimilarDocumentsResponse(BaseModel):
+    title: List[FoundDocument] = Field(..., description='Documents with similar title')
+    text: List[FoundDocument] = Field(..., description='Documents with similar text')
 
 class Document(BaseModel):
     id: str = Field(..., example='663fa9788275d659b2aa3caf', title='Document id from MongoDB')
     gost_number: str = Field(..., example='ГОСТ 20809-75', title='Document (GOST) number')
     title: str = Field(..., example='Патроны охотничьи 9х53. Типы и основные размеры', title='Document title')
+    path: Optional[str] = Field(default="", example='c:/uploads/file.pdf', title='Document absolute file path on server')

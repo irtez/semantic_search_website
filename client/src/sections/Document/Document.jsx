@@ -1,12 +1,20 @@
 import React, { useState, useEffect} from 'react';
 import classes from './Document.module.css'
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getOne, downloadOne, editDocument, deleteDocument } from '../../http/documentAPI';
+import { getSimilarDocs } from '../../http/searchAPI';
 import Loading from '../Loading';
 import { useContext } from 'react';
 import { AppContext } from '../../routes/AppContext';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import '@react-pdf-viewer/core/lib/styles/index.css';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import Typography from '@mui/material/Typography';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 
 
@@ -20,6 +28,9 @@ const Document = () => {
     const navigate = useNavigate()
     const { user } = useContext(AppContext)
     const [isUpdatePending, setIsUpdatePending] = useState(false)
+    const [similarDocs, setSimilarDocs] = useState(null)
+    const [simType, setSimType] = useState('title')
+
     useEffect(() => {
         getOne(id)
           .then(responseData => {
@@ -41,6 +52,21 @@ const Document = () => {
             }
             else {
               setFileUrl(URL.createObjectURL(responseData.data))
+            }
+          })
+          .catch(error => {
+            console.log('Error fetching data:', error)
+          })
+      }, [id])
+
+      useEffect(() => {
+        getSimilarDocs(id)
+          .then(responseData => {
+            if (!responseData) {
+              setSimilarDocs('not found')
+            }
+            else {
+              setSimilarDocs(responseData.data)
             }
           })
           .catch(error => {
@@ -75,6 +101,9 @@ const Document = () => {
         setIsEditing(true)
       }
       else {
+        if (!(Object.values(editedDoc).some(value => value !== ''))) {
+            setEditedDoc(null)
+          }
         setIsEditing(false)
       }
     }
@@ -108,6 +137,74 @@ const Document = () => {
 
   return (
     <section id={classes.doc}>
+      <div className={classes['similar-docs']}>
+        <Accordion style={{
+          borderRadius: "10px", 
+          boxShadow: "0px 0px 8px 0px rgba(34, 60, 80, 0.49)",
+          width: "100%"
+        }} defaultExpanded>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="panel1a-content"
+            id="panel1a-header"
+            style = {{border: "1px solid black", borderRadius: "10px"}}
+          >
+            <Typography >
+                  Похожие документы
+            </Typography>
+          </AccordionSummary>
+            <AccordionDetails >
+              <Typography style={
+                  {
+                    padding: "10px", 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    justifyContent: "center", 
+                    alignItems: "center",
+                    gap: "30px"
+                  }
+              }>
+                <ToggleButtonGroup
+                  color="info"  
+                  value={simType}
+                  onChange={(e) => setSimType(e.target.value)}
+                  exclusive
+                  aria-label="Platform"
+                >
+                  <ToggleButton value='title'>По названию</ToggleButton>
+                  <ToggleButton value='text'>По содержанию</ToggleButton>
+                </ToggleButtonGroup>
+                {similarDocs ? (
+                  similarDocs[simType].length ? (
+                    <ul>
+                    {similarDocs[simType].map(doc => {
+                      return <li 
+                          dataAttr={'Близость: ' + Math.round(doc.similarity_score * 10000)/100 + '%'} 
+                          style={{paddingBottom: "30px", lineHeight: "1.2", textAlign: "justify"}}
+                        >
+                          <Link to={`/docs/${doc._id}`} style={{color: "black"}}>
+                            {doc.gost_number}. {doc.title} <span style={{fontStyle: "italic"}}>({doc.status})</span>
+                          </Link>
+                        </li>
+                    })}
+                    </ul>)
+                    : 
+                    (<p>Документы не найдены.</p>)
+                ) 
+                : 
+                (similarDocs === 'not found' ? 
+                  ('Документы не найдены') 
+                  : 
+                  (
+                    <div className={classes['loading-holder']}>
+                      <Loading height='100%' spinnerSize='60px'/>
+                    </div>
+                  )
+                )}
+              </Typography>
+            </AccordionDetails>
+        </Accordion>
+      </div>
       <div className={classes['doc-info']}>
         {!isUpdatePending ? (
           <>

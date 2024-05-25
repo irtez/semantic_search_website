@@ -3,14 +3,14 @@ import os
 # Config that serves all environment
 GLOBAL_CONFIG = {
     "titles_collection_name": "gosts_titles2",
+    "chunks_collection_name": "gosts_mean_chunks",
     "qdrant_host": "localhost",
     "qdrant_port": 6333,
     "qdrant_n_parallel": 1,
     "models_folder": "../models",
     "semantic_search_model": "multilingual-e5-large",
     "tokenizer_folder": "tokenizer",
-    "onnx_folder": "model",
-    "ROUND_DIGIT": 6
+    "onnx_folder": "model"
 }
 
 # Environment specific config, or overwrite of GLOBAL_CONFIG
@@ -20,8 +20,7 @@ ENV_CONFIG = {
     },
 
     "production": {
-        "DEBUG": False,
-        "ROUND_DIGIT": 3
+        "DEBUG": False
     }
 }
 

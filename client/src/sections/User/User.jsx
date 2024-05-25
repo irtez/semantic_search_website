@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { getMe, updateUser } from '../../http/userAPI'
 import { createCollection, getCollections, deleteCollection, editCollection } from '../../http/collectionAPI'
-// import { useContext } from 'react';
-// import { AppContext } from '../../routes/AppContext';
 import classes from './User.module.css' 
 import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
@@ -186,7 +184,7 @@ const User = () => {
     const navigate = useNavigate()
     const location = useLocation()
     const [collectionsData, setCollectionsData] = useState([])
-    // const { user } = useContext(AppContext)
+    
     useEffect(() => {
         getMe()
           .then(responseData => {

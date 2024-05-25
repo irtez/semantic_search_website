@@ -181,12 +181,6 @@ const Admin = () => {
                                         <div className={classes['chosen-file-info-block']}>
                                             <p className={classes['chosen-file-info']}><b>{index + 1}. Название: </b>{file.name}</p>
                                             <p className={classes['chosen-file-info']}><b>Размер: </b>{getPrettifiedSize(file.size)}</p>
-                                                {/* <select value={docStatuses[index] || 'present'} data-value={index} onChange={handleChangeStatus} name='doc-status'>
-                                                    <option value='present' label="Действует"/>
-                                                    <option value='cancelled' label="Отменён"/>
-                                                    <option value='replaced' label="Заменён"/>
-                                                    <option value='accepted' label="Принят"/>
-                                                </select> */}
                                             <TextField required name='gost_number' label="Номер документа" onChange={(e) => handleChangeInfo(e, index)} />
                                             <TextField required name='title' label="Название документа" onChange={(e) => handleChangeInfo(e, index)} />
                                             <TextField name='status' label="Статус" onChange={(e) => handleChangeInfo(e, index)} />

@@ -11,9 +11,9 @@ function sleep(milliseconds) {
     const date = Date.now();
     let currentDate = null;
     do {
-      currentDate = Date.now();
+        currentDate = Date.now();
     } while (currentDate - date < milliseconds);
-  }
+}
 
 
 async function getText(docPath) {
@@ -119,7 +119,8 @@ class documentController {
                         id: document._id,
                         title: document.title,
                         gost_number: document.gost_number,
-                        filename: doc.file.filename
+                        filename: doc.file.filename,
+                        path: doc.file.path
                     })
                 } catch (e) {
                     console.log('Error processing document', doc.file.filename, ', error:', e);
@@ -211,9 +212,9 @@ class documentController {
                     console.log(responseData)
                     return res.status(400).json({message: "Ошибка при обновлении в семантическом модуле", responseData})
                 }
-                await document.save()
             }
             sleep(500)
+            await document.save()
             return res.status(200).json({document})
 
         } catch (e) {
@@ -241,11 +242,22 @@ class documentController {
             }
             const filter = { documents: docId }
             const update = { $pull: { documents: docId } }
-            const result = await Collection.updateMany(filter, update)
+            await Collection.updateMany(filter, update)
+            
+            if (deleted.filename) {
+                try {
+                    await fs.unlink(path.join(__dirname, '..', 'uploads/' + deleted.filename))
+                }
+                catch (e) {
+                    console.log(e)
+                }
+            }
+
+            
             return res.status(200).json(deleted)
         } catch (e) {
             console.log(e)
-            return res.status(400).json({message: 'Delete brand error'})
+            return res.status(400).json({message: 'Ошибка удаления документа'})
         }
     }
 

@@ -102,7 +102,8 @@ const Footer = () => {
 const Bottom = () => {
     return (
         <div className="copyrightText">
-            Copyright © 2024 Student MIREA. All Rights Reserved
+            <p>Copyright © 2024 Student MIREA. All Rights Reserved</p>
+            <p className="disclaimer">Все материалы, размещенные на сайте, представлены исключительно для ознакомления.</p>
         </div>
     )
 }

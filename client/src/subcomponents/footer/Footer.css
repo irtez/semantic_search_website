@@ -85,15 +85,24 @@ footer li {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+
+}
+.disclaimer {
+    font-size: 14px;
+    position: absolute;
+    margin-top: 50px;
+    font-style: italic;
+    color: rgb(216, 203, 186);
 }
 
-.copyrightText p {
+/* .copyrightText p {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 0;
     height: 100%;
-}
+} */
 
 .aboutus {
     text-align: justify;

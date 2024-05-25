@@ -5,13 +5,27 @@ function escapeRegex(str) {
     return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
+function sleep(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+        currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+}
 
 const docsPerPage = 5
 const maxLength = 200
 const semanticHost = process.env.semanticHost
 const semanticPort = process.env.semanticPort
 
-const getSimilarDocuments = async (query) => {
+function enrichDocuments(docs, documentMap) {
+    return docs.map(doc => ({
+        ...doc,
+        ...documentMap[doc.document_id]
+    }))
+}
+
+const searchDocuments = async (query) => {
     const { default: fetch } = await import('node-fetch')
     const url = new URL(`http://${semanticHost}:${semanticPort}/api/search/titles`)
     const params = new URLSearchParams()
@@ -30,6 +44,25 @@ const getSimilarDocuments = async (query) => {
     )
     return response
 }
+
+async function semanticSimilar(docId) {
+    const { default: fetch } = await import('node-fetch')
+    const url = new URL(`http://${semanticHost}:${semanticPort}/api/similar`)
+    const params = new URLSearchParams()
+    params.set('id', docId)
+    url.search = params.toString()
+    const response = await fetch(
+        url,
+        {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+    )
+    return response
+}
+
 
 // function sortDocuments(documents, query) {
 //     return documents.map(document => {
@@ -128,7 +161,7 @@ class searchController {
             if (!query) {
                 return res.status(400).json({message: "Поисковый запрос отсутствует"})
             }
-            const response = await getSimilarDocuments(query)
+            const response = await searchDocuments(query)
             
             if (!response.ok) {
                 return res.status(400).json({message: 'Ошибка соединения с модулем семантического поиска'})
@@ -159,6 +192,45 @@ class searchController {
         } catch (e) {
             console.log(e)
             return res.status(400).json({message: 'Ошибка семантического поиска'})
+        }
+    }
+
+    async similar(req, res) {
+        try {
+            const docId = req.params.id
+            const document = await Document.findById(docId)
+            if (!document) {
+                return res.status(404).json({message: "Документ не найден"})
+            }
+
+            const response = await semanticSimilar(docId)
+            if (!response.ok) {
+                const responseData = await response.json()
+                console.log(responseData)
+                return res.status(400).json({message: "Ошибка при удалении в семантическом модуле", responseData})
+            }
+            const documents = await response.json()
+            const textDocumentIds = documents.text.map(doc => doc.document_id)
+            const titleDocumentIds = documents.title.map(doc => doc.document_id)
+            const allDocumentIds = [...new Set([...textDocumentIds, ...titleDocumentIds])]
+            const foundDocuments = await Document.find(
+                { _id: { $in: allDocumentIds } },
+                { concurrent: true }
+            )
+            .select('_id gost_number title status')
+            .limit(maxLength)
+
+            const documentMap = foundDocuments.reduce((map, doc) => {
+                map[doc._id] = doc._doc
+                return map
+            }, {})
+
+            documents.text = enrichDocuments(documents.text, documentMap)
+            documents.title = enrichDocuments(documents.title, documentMap)
+            return res.status(200).json(documents)
+        } catch (e) {
+            console.log(e)
+            return res.status(400).json({message: 'Delete brand error'})
         }
     }
 
