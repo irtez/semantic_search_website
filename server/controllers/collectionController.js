@@ -6,13 +6,13 @@ const Document = require('../models/Document')
 const maxCollections = 5 
 const maxDocuments = 30
 
-function sleep(milliseconds) {
-    const date = Date.now();
-    let currentDate = null;
-    do {
-      currentDate = Date.now();
-    } while (currentDate - date < milliseconds);
-  }
+// function sleep(milliseconds) {
+//     const date = Date.now();
+//     let currentDate = null;
+//     do {
+//       currentDate = Date.now();
+//     } while (currentDate - date < milliseconds);
+//   }
 
 class collectionController {
     async create(req, res) {
@@ -124,7 +124,6 @@ class collectionController {
             }
             collection.documents = presentDocs
             await collection.save()
-            sleep(1000)
             return res.status(200).json({collection})
         } catch (e) {
             console.log(e)
@@ -152,7 +151,6 @@ class collectionController {
             }
 
             await collection.deleteOne()
-            sleep(1000)
             return res.status(200).json({message: "OK"})
         } catch (e) {
             console.log(e)

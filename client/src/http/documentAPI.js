@@ -12,6 +12,7 @@ export const addDocuments = async (data) => {
     } catch (e) {
         console.log(e.response.data.message)
         alert(e.response.data.message)
+        throw e
     }
 }
 

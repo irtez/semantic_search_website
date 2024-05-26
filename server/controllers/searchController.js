@@ -5,13 +5,13 @@ function escapeRegex(str) {
     return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-function sleep(milliseconds) {
-    const date = Date.now();
-    let currentDate = null;
-    do {
-        currentDate = Date.now();
-    } while (currentDate - date < milliseconds);
-}
+// function sleep(milliseconds) {
+//     const date = Date.now();
+//     let currentDate = null;
+//     do {
+//         currentDate = Date.now();
+//     } while (currentDate - date < milliseconds);
+// }
 
 const docsPerPage = 5
 const maxLength = 200

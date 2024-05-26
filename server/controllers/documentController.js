@@ -7,13 +7,13 @@ const pdf = require('pdf-parse')
 const semanticHost = process.env.semanticHost
 const semanticPort = process.env.semanticPort
 
-function sleep(milliseconds) {
-    const date = Date.now();
-    let currentDate = null;
-    do {
-        currentDate = Date.now();
-    } while (currentDate - date < milliseconds);
-}
+// function sleep(milliseconds) {
+//     const date = Date.now();
+//     let currentDate = null;
+//     do {
+//         currentDate = Date.now();
+//     } while (currentDate - date < milliseconds);
+// }
 
 
 async function getText(docPath) {
@@ -73,7 +73,7 @@ class documentController {
                     errorFiles: rawDocuments.map(doc => doc.filename)
                 })
             }
-            const errorFiles = []
+            const errorFiles = {}
             const updatedDocInfo = docInfo.map((info, index) => {
                 return {
                     ...info,
@@ -82,7 +82,7 @@ class documentController {
             })
             const documents = updatedDocInfo.reduce((acc, doc) => {
                 if (!(doc.file.filename.endsWith('.pdf') || doc.file.filename.endsWith('.txt'))) {
-                    errorFiles.push(doc.file.filename)
+                    errorFiles[doc.file.filename] = 'Неверный формат файла'
                 }
                 else {
                     acc.push(doc)
@@ -98,22 +98,22 @@ class documentController {
             
             for (const doc of documents) {
                 try {
-                    let docText;
+                    let docText
                     try {
-                        docText = await getText(doc.file.path);
+                        docText = await getText(doc.file.path)
                     } catch (e) {
-                        console.log('Error getting text from file', doc.file.filename, ', error:', e);
-                        errorFiles.push(doc.file.filename);
-                        continue;
+                        console.log('Error getting text from file', doc.file.filename, ', error:', e)
+                        errorFiles[doc.file.filename] = 'Ошибка считывания текста из файла'
+                        continue
                     }
         
-                    const curDocInfo = {...doc};
+                    const curDocInfo = {...doc}
                     delete curDocInfo.file;
                     const document = new Document({
                         ...curDocInfo,
                         filename: doc.file.filename,
                         text_plain: docText
-                    });
+                    })
                     await document.save()
                     savedDocs.push({
                         id: document._id,
@@ -123,12 +123,12 @@ class documentController {
                         path: doc.file.path
                     })
                 } catch (e) {
-                    console.log('Error processing document', doc.file.filename, ', error:', e);
-                    errorFiles.push(doc.file.filename);
+                    console.log('Error processing document', doc.file.filename, ', error:', e)
+                    errorFiles[doc.file.filename] = 'Ошибка сохранения документа'
                 }
             }
 
-            if (errorFiles.length === rawDocuments.length) {
+            if (Object.keys(errorFiles).length === rawDocuments.length) {
                 return res.status(400).json({message: "Ни один из файлов не сохранен", errorFiles})
             }
             
@@ -213,7 +213,6 @@ class documentController {
                     return res.status(400).json({message: "Ошибка при обновлении в семантическом модуле", responseData})
                 }
             }
-            sleep(500)
             await document.save()
             return res.status(200).json({document})
 

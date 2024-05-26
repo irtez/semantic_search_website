@@ -150,7 +150,7 @@ const SavedCollections = (props) => {
                               ) : ('')}
                                 <Link 
                                   to={'/docs/' + doc.id}
-                                  onClick={() => {window.scrollTo({top: 0})}}
+                                  onClick={() => {window.scrollTo({top: 0, behavior: 'smooth'})}}
                                 >
                                   ○ {doc.gost_number}. {doc.title} ({doc.status})
                                 </Link>

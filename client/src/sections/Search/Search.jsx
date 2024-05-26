@@ -206,6 +206,7 @@ const Search = () => {
       return
     }
     const startTime = performance.now() / 1000
+    setTooSmallQueryWarning(false)
     setSearchTime(null)
     setLoading(true)
     setFoundDocuments([])
@@ -442,7 +443,8 @@ const Search = () => {
                   }
                    onClick={() => {
                       window.scrollTo({
-                        top: 0
+                        top: 0,
+                        behavior: 'smooth'
                       })
                     }
                    }

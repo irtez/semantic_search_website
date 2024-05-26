@@ -2,7 +2,6 @@ import React from 'react';
 import './styles/sections.css'
 
 
-//style={{height}}
 const Loading = (props) => {
   const height = props.height || '100vh'
   const marginTop = props.marginTop || '0'

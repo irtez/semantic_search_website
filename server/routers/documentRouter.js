@@ -11,6 +11,5 @@ router.get('/:id', controller.getOne)
 router.get('/download/:id', controller.downloadOne)
 router.delete('/:id', roleMiddleware(['ADMIN']), controller.delete)
 router.patch('/:id', roleMiddleware(['ADMIN']), controller.update)
-// router.post('/test', [upload.array("files"), roleMiddleware(['ADMIN'])], controller.test)
 
 module.exports = router

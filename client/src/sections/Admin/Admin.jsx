@@ -21,11 +21,12 @@ const Admin = () => {
     const handleDocsSubmit = async (e) => {
         e.preventDefault()
         setIsLoading(true)
-        window.scrollTo({top: 0})
+        window.scrollTo({top: 0, behavior: 'smooth'})
         const totalSize = chosenFiles.reduce((sum, file) => sum + file.size, 0)
         if ((totalSize / (1024**2)) >= 5) {
             setTooHeavyDocsWarning(getPrettifiedSize(totalSize))
         }
+        let response
         try {
             const formData = new FormData()
             chosenFiles.forEach((file) => {
@@ -33,14 +34,15 @@ const Admin = () => {
             })
             formData.append('info', JSON.stringify(docsInfo))
 
-            const response = await addDocuments(formData)
+            response = await addDocuments(formData)
+            console.log(response)
             if (response.status === 200) {
                 setFiles([])
                 setDocsInfo([])
-                if (response.data.errorFiles.length) {
+                if (response.data.errorFiles) {
                     setErrorFiles(response.data.errorFiles)
                 }
-                if (response.data.savedDocs.length) {
+                if (response.data.savedDocs && response.data.savedDocs.length) {
                     setUploadedFiles(response.data.savedDocs)
                 }
             }
@@ -49,8 +51,17 @@ const Admin = () => {
             }
             
         } catch (error) {
+            setFiles([])
+            setDocsInfo([])
+            if (error.response.data.errorFiles) {
+                setErrorFiles(error.response.data.errorFiles)
+            }
+            if (error.response.data.savedDocs && error.response.data.savedDocs.length) {
+                setUploadedFiles(error.response.data.savedDocs)
+            }
             console.error("Error processing files:", error)
         }
+        
         setTooHeavyDocsWarning(false)
         setIsLoading(false)
     }
@@ -248,13 +259,15 @@ const Admin = () => {
                         :
                         ('')
                     }
-                    {errorFiles.length ? 
+                    {Object.keys(errorFiles).length ? 
                         (
                             <div className={classes['new-files-error']}>
                                 <p><b>Следующие файлы не были загружены из-за ошибок:</b></p>
-                                {errorFiles.map((filename, index) => 
-                                    <p>{index + 1}. {filename}</p>
-                                )}
+                                {
+                                    Object.entries(errorFiles).map(([key, value], index) => {
+                                        return <p key={index+1}>{index+1}. {key}: {value}</p>
+                                      })
+                                }
                             </div>
                         )
                         :

@@ -286,7 +286,11 @@ const Document = () => {
                           dataattr={'Близость: ' + Math.round(doc.similarity_score * 10000)/100 + '%'} 
                           style={{paddingBottom: "30px", lineHeight: "1.2", textAlign: "justify"}}
                         >
-                          <Link to={`/docs/${doc._id}`} style={{color: "black"}} onClick={() => {window.scrollTo({top: 0})}}>
+                          <Link 
+                            to={`/docs/${doc._id}`} 
+                            style={{color: "black"}} 
+                            onClick={() => {window.scrollTo({top: 0, behavior: 'smooth'})}}
+                          >
                             {doc.gost_number}. {doc.title} <span style={{fontStyle: "italic"}}>({doc.status})</span>
                           </Link>
                         </li>
