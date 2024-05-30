@@ -206,7 +206,6 @@ class searchController {
             const response = await semanticSimilar(docId)
             if (!response.ok) {
                 const responseData = await response.json()
-                console.log(responseData)
                 return res.status(400).json({message: "Ошибка при получении похожих документов", responseData})
             }
             const documents = await response.json()

@@ -50,7 +50,6 @@ const SavedCollections = (props) => {
   const handleDocSelect = (e) => {
     const docId = e.target.value
     if (docsToDelete.includes(docId)) {
-      console.log(docsToDelete)
       setDocsToDelete([...docsToDelete.filter(doc => doc !== docId)])
     }
     else {

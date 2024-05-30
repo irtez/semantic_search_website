@@ -35,7 +35,6 @@ const Admin = () => {
             formData.append('info', JSON.stringify(docsInfo))
 
             response = await addDocuments(formData)
-            console.log(response)
             if (response.status === 200) {
                 setFiles([])
                 setDocsInfo([])
@@ -149,10 +148,6 @@ const Admin = () => {
         setDocsInfo(tempInfo)
     }
 
-    const handleTestClick = (e) => {
-        console.log(docsInfo)
-    }
-
 
   return (
     <section id={classes.admin}>
@@ -214,7 +209,7 @@ const Admin = () => {
                             {!chosenFiles.length ? (<p>Файлы не выбраны.</p>) : 
                             (    
                                 <>  
-                                <h5 onClick={handleTestClick}>Выбранные файлы ({chosenFiles.length}) {chosenFiles.length ? 
+                                <h5>Выбранные файлы ({chosenFiles.length}) {chosenFiles.length ? 
                                     (<span onClick={handleDeleteAll} className={classes['delete-all']}>Убрать все</span>) : ('')}
                                 </h5>        
                                 {chosenFiles.map((file, index) =>

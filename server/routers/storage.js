@@ -17,8 +17,10 @@ const storage = multer.diskStorage({
               if (err) {
                 cb(null, fileName);
               } else {
-                const [baseName, ext] = fileName.split('.');
-                const newFileName = `${baseName}-${counter}.${ext}`;
+                const match = fileName.match(/^(.*?)(-\d+)?(\.[^.]+)$/);
+                const baseName = match[1];
+                const ext = match[3];
+                const newFileName = `${baseName}-${counter}${ext}`;
                 checkAndRename(newFileName, counter + 1);
               }
             });

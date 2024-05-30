@@ -95,7 +95,6 @@ class documentController {
             }    
 
             const savedDocs = []
-            
             for (const doc of documents) {
                 try {
                     let docText
@@ -131,9 +130,12 @@ class documentController {
             if (Object.keys(errorFiles).length === rawDocuments.length) {
                 return res.status(400).json({message: "Ни один из файлов не сохранен", errorFiles})
             }
-            
             const response = await fetchSemantic('POST', savedDocs)
             const responseData = await response.json()
+            Object.keys(errorFiles).forEach(async (filename) => {
+                const filePath = path.join(__dirname, '..', 'uploads', filename)
+                await fs.unlink(filePath)
+            })
             if (response.status === 200) {
                 return res.status(200).json({message: "OK", errorFiles, savedDocs})
             }

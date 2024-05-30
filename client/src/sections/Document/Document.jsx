@@ -98,7 +98,6 @@ const Document = () => {
                 name,
                 documents: Object.values(documents).map(({ id }) => id), // Извлекаем ключи объекта documents как массив
               }))
-              console.log(collections)
               setUserCollections(collections)
               if (collections) {
                 setChosenCollection(collections[0])
@@ -188,7 +187,6 @@ const Document = () => {
           add: [id]
         })
         if (response.status === 200) {
-          console.log(response.data.collection)
           const updatedCollections = userCollections.map(collection =>
             collection._id === chosenCollection._id ? response.data.collection : collection
           )
